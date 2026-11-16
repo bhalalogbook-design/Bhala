@@ -1,0 +1,1827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bhala</title>
+<meta name="description" content="Bhala: the daily logbook for South African artisan apprentices. Log your day in 2 minutes, match your codes, print your logbook.">
+<meta name="theme-color" content="#0E2A47">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bhala">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: one phone-width app column; navy header band, white cards on a cool grey ground, safety-orange actions, fixed bottom bar */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface-2:#EEF1F5; --line:#E0E5EB; --line-strong:#C3CCD6;
+  --fg:#14202E; --muted:#4A5868; --brand:#0E2A47; --on-brand:#FFFFFF; --on-brand-muted:#C8D3DF; --brand-chip:#1D3D60;
+  --accent:#F26B1D; --on-accent:#0E2A47; --accent-soft:#FDEBDF; --accent-tint:#FFF6F0; --accent-text:#B4490A;
+  --chip:#E8EDF3; --ok-bg:#E3F3EA; --ok-fg:#1B6B3E; --warn-bg:#FDEBDF; --warn-fg:#8A3707;
+  --danger:#B42318; --danger-bg:#FDECEA; --focus:#2E6BD8; --thumb:#DCE3EB; --toast-bg:#14202E; --toast-fg:#FFFFFF;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-display:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B1521; --surface:#132131; --surface-2:#192A3C; --line:#243649; --line-strong:#3A4F66;
+  --fg:#E9EEF4; --muted:#A5B3C2; --brand:#0F2C4B; --on-brand:#FFFFFF; --on-brand-muted:#B9C7D6; --brand-chip:#1F4369;
+  --accent:#F47A30; --on-accent:#0B1521; --accent-soft:#3B2618; --accent-tint:#2A1D14; --accent-text:#FF9C5E;
+  --chip:#22354A; --ok-bg:#12392A; --ok-fg:#86D9A8; --warn-bg:#3E2715; --warn-fg:#FFB580;
+  --danger:#FF8A80; --danger-bg:#3D1C1A; --focus:#7AA7FF; --thumb:#22354A; --toast-bg:#E9EEF4; --toast-fg:#0B1521;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0B1521; --surface:#132131; --surface-2:#192A3C; --line:#243649; --line-strong:#3A4F66;
+  --fg:#E9EEF4; --muted:#A5B3C2; --brand:#0F2C4B; --on-brand:#FFFFFF; --on-brand-muted:#B9C7D6; --brand-chip:#1F4369;
+  --accent:#F47A30; --on-accent:#0B1521; --accent-soft:#3B2618; --accent-tint:#2A1D14; --accent-text:#FF9C5E;
+  --chip:#22354A; --ok-bg:#12392A; --ok-fg:#86D9A8; --warn-bg:#3E2715; --warn-fg:#FFB580;
+  --danger:#FF8A80; --danger-bg:#3D1C1A; --focus:#7AA7FF; --thumb:#22354A; --toast-bg:#E9EEF4; --toast-fg:#0B1521;
+  color-scheme:dark; }
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p,figure{margin:0}
+.app{max-width:480px;margin:0 auto;min-height:100%}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.stack,.stack-xs,.stack-sm,.stack-lg{display:flex;flex-direction:column}
+.stack{gap:12px}.stack-xs{gap:4px}.stack-sm{gap:8px}.stack-lg{gap:20px}
+.row{display:flex;align-items:center;gap:12px}
+.row-top{display:flex;align-items:flex-start;gap:12px}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid-site{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:8px}
+.muted{color:var(--muted)}.sm{font-size:13px}.xs{font-size:12px}.fw4{font-weight:400}.fw5{font-weight:500}.fw6{font-weight:600}
+.accent-text{color:var(--accent-text)}
+.h1{font-family:var(--font-display);font-size:24px;font-weight:700;line-height:1.2;text-wrap:balance}
+.h2{font-size:17px;font-weight:600}
+.h3{font-size:16px;font-weight:600}
+
+/* header band */
+.hero{background:var(--brand);color:var(--on-brand)}
+.hero-in{padding-block:16px 22px;display:flex;flex-direction:column;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:21px;letter-spacing:-.01em}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--brand);display:grid;place-items:center}
+.testbadge{font:inherit;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--on-brand-muted);color:var(--on-brand-muted);background:transparent;white-space:nowrap;cursor:pointer}
+.price{font-size:15px;color:var(--muted)}.price b{font-family:var(--font-display);font-size:36px;color:var(--fg);margin-right:4px}
+.ticks{list-style:none;margin:0;padding:0;display:grid;gap:8px}.ticks li{padding-left:28px;position:relative;font-size:15px}
+.ticks li::before{content:'';position:absolute;left:4px;top:4px;width:12px;height:7px;border-left:2.5px solid var(--ok-fg);border-bottom:2.5px solid var(--ok-fg);transform:rotate(-45deg)}
+.hero-title{font-family:var(--font-display);font-size:28px;line-height:1.15;font-weight:700;text-wrap:balance}
+.hero-sub{color:var(--on-brand-muted);font-size:14px}
+.tradechip{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;background:var(--brand-chip);color:var(--on-brand);font-size:13px;font-weight:600}
+.tradechip svg{color:var(--accent)}
+.hero .meter{background:rgba(255,255,255,.18);height:8px;border-radius:4px}
+
+main{display:flex;flex-direction:column;gap:16px;padding-block:16px 24px}
+main.has-bar{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+
+/* buttons */
+.btn{min-height:48px;padding:0 16px;border-radius:12px;border:0;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;text-align:center;line-height:1.2;cursor:pointer}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-lg{min-height:54px;font-size:16px;border-radius:14px}
+.btn-ghost{background:var(--surface);color:var(--fg);border:1.5px solid var(--line-strong);font-weight:600}
+.btn-outline{background:var(--surface);color:var(--fg);border:1.5px solid var(--fg);font-weight:600}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger);font-weight:600}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn-block{width:100%}
+.linkbtn{background:none;border:0;padding:0 2px;min-height:44px;color:var(--accent-text);font-weight:600;font-size:14px;cursor:pointer}
+.iconbtn{width:44px;height:44px;border-radius:22px;border:0;background:transparent;color:var(--fg);display:grid;place-items:center;flex-shrink:0}
+.iconbtn-spacer{width:44px;height:44px;flex-shrink:0}
+.ico-tile{width:40px;height:40px;flex-shrink:0;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center}
+.ico-tile.ok{background:var(--ok-bg);color:var(--ok-fg)}
+
+/* week strip and stats */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{min-height:64px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 0}
+.day .dl{font-size:11px;font-weight:600;color:var(--muted)}
+.day .dd{font-family:var(--font-display);font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.day .ddot{width:7px;height:7px;border-radius:50%;background:var(--line-strong)}
+.day.on{background:var(--ok-bg);border-color:var(--ok-bg)}
+.day.on .ddot{background:var(--ok-fg)}
+.day.today{border-color:var(--accent)}
+.day[disabled]{opacity:.45;cursor:default}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px;text-align:left;color:var(--fg)}
+.stat b{font-family:var(--font-display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat b small{font-size:15px;color:var(--muted);font-weight:500}
+.stat span{font-size:12px;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px;display:block}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:inherit}
+
+/* entries */
+.entries{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.entry{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;color:var(--fg)}
+.entry:last-child{border-bottom:0}
+.datebox{width:40px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.dow{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em}
+.dnum{font-family:var(--font-display);font-size:20px;font-weight:700}
+.entry-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.entry-title{font-weight:600;font-size:15px}
+.entry-meta{font-size:13px;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--chip);color:var(--fg);white-space:nowrap}
+.tag.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.month{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:4px 4px 0}
+
+/* forms */
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:500;color:var(--muted);min-width:0}
+input[type=text],input[type=email],input[type=date],input[type=time],input[type=search],input[type=number],select,textarea{width:100%;min-height:48px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);font-size:15px;font-weight:400}
+input[type=date],input[type=time]{padding:0 8px}
+textarea{padding:10px 12px;min-height:88px;resize:vertical;line-height:1.45}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.sr-only:focus-visible + label{outline:3px solid var(--focus);outline-offset:2px}
+.addrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.searchbox{position:relative}
+.searchbox svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.searchbox input{padding-left:40px}
+
+/* choice controls */
+.opt{width:100%;min-height:58px;padding:8px 12px;display:flex;align-items:center;gap:12px;text-align:left;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--fg)}
+.opt[aria-checked=true]{border-color:var(--accent);background:var(--accent-tint)}
+.dot{width:20px;height:20px;flex-shrink:0;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center}
+.opt[aria-checked=true] .dot{border-color:var(--accent-text)}
+.opt[aria-checked=true] .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent-text)}
+.opt-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.opt-title{font-weight:600;font-size:15px}
+.opt-sub{font-size:12.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;text-align:left}
+.chip[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.chip svg{width:16px;height:16px;flex-shrink:0}
+.chip.dashed{border-style:dashed}
+.toolgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tool{position:relative;min-height:84px;padding:8px 6px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-size:13px;font-weight:600;line-height:1.2}
+.tool .tic{color:var(--muted);display:flex}
+.tool[aria-pressed=true]{border-color:var(--accent);background:var(--accent-tint)}
+.tool[aria-pressed=true] .tic{color:var(--accent-text)}
+.tool .tick{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.tool .tick svg{width:12px;height:12px}
+.trades{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.trade{min-height:58px;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--fg);text-align:left;font-weight:600;font-size:14px;line-height:1.2}
+.trade .ti{width:36px;height:36px;border-radius:10px;background:var(--chip);color:var(--fg);display:grid;place-items:center;flex-shrink:0}
+.trade[aria-pressed=true]{border-color:var(--accent);background:var(--accent-tint)}
+.trade[aria-pressed=true] .ti{background:var(--accent);color:var(--on-accent)}
+
+/* log flow */
+.flowtop{background:var(--surface);border-bottom:1px solid var(--line)}
+.flowtop-in{padding-block:8px 12px;display:flex;flex-direction:column;gap:8px}
+.progress{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:0 4px}
+.progress span{height:6px;border-radius:3px;background:var(--line)}
+.progress span.on{background:var(--accent)}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.bar-in{max-width:480px;margin:0 auto;padding-top:10px;padding-bottom:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:6px}
+.nav-in{flex-direction:row;align-items:flex-end;justify-content:space-between;padding-top:6px;padding-bottom:10px}
+.nav-it{min-width:58px;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500}
+.nav-it[aria-current=page]{color:var(--fg);font-weight:700}
+.nav-plus{width:58px;height:58px;margin-bottom:4px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.nav-plus svg{width:26px;height:26px}
+.codecard{background:var(--brand);color:var(--on-brand);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.codecard .k{font-size:13px;font-weight:600;color:var(--on-brand-muted)}
+.codecard .code{font-family:var(--font-display);font-size:21px;font-weight:700;letter-spacing:.01em;overflow-wrap:anywhere}
+.codecard .desc{font-size:14px;color:var(--on-brand-muted)}
+.codecard .draft{align-self:flex-start;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--brand-chip);color:var(--on-brand)}
+.pips{display:flex;align-items:center;gap:6px}
+.pip{width:12px;height:12px;border-radius:50%;border:2px solid var(--on-brand-muted)}
+.pip.on{background:var(--accent);border-color:var(--accent)}
+.dl{display:flex;flex-direction:column;padding:0 14px;margin:0}
+.dl-row{display:flex;align-items:center;gap:10px;min-height:50px;padding-block:6px;border-bottom:1px solid var(--line)}
+.dl-row:last-child{border-bottom:0}
+.dl-row dt{width:84px;flex-shrink:0;font-size:13px;color:var(--muted)}
+.dl-row dd{margin:0;flex:1;min-width:0;font-size:14px;font-weight:600}
+.check{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0;margin:0}
+.mat-list{list-style:none;margin:0;padding:0 14px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.mat{display:flex;align-items:center;gap:8px;min-height:62px;border-bottom:1px solid var(--line);padding-block:6px}
+.mat:last-child{border-bottom:0}
+.mat-name{flex:1;min-width:0;font-weight:600;font-size:14.5px}
+.stepper{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.stepper button{width:40px;height:44px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);display:grid;place-items:center}
+.stepper button.plus{border-color:var(--accent);background:var(--accent-soft)}
+.stepper input{width:58px;min-height:44px;text-align:center;padding:0 4px;font-weight:700;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.unit{font-size:12px;color:var(--muted);width:40px;flex-shrink:0;overflow-wrap:anywhere}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.thumbs.big{grid-template-columns:repeat(2,minmax(0,1fr))}
+.thumb{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--thumb);max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb-x{position:absolute;top:4px;right:4px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(10,20,32,.72);color:#FFFFFF;display:grid;place-items:center}
+.thumb .miss{display:none}
+.thumb.missing .miss{display:grid;position:absolute;inset:0;place-items:center;font-size:12px;color:var(--muted);text-align:center;padding:6px}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:14px;background:var(--accent-tint);color:var(--fg);border:1.5px solid var(--accent)}
+.banner > svg{flex-shrink:0;margin-top:1px;color:var(--accent-text)}
+.banner.warn{background:var(--danger-bg);border-color:var(--danger)}
+.banner.warn > svg{color:var(--danger)}
+.err{color:var(--danger);font-size:14px;font-weight:600}
+.empty{text-align:center;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.copybox{font-size:13px;min-height:150px;font-family:var(--font-body)}
+
+/* codes */
+.lvls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.lvl{min-height:58px;padding:8px;border-radius:10px;border:0;background:var(--surface-2);color:var(--fg);display:flex;flex-direction:column;justify-content:space-between;gap:6px;text-align:left}
+.lvl.done{background:var(--ok-bg);color:var(--ok-fg)}
+.lvl-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.lvl-dots{display:flex;gap:4px}
+.lvl-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--muted)}
+.lvl-dots i.on{background:var(--accent);border-color:var(--accent)}
+.lvl.done .lvl-dots i{background:var(--ok-fg);border-color:var(--ok-fg)}
+
+/* logbook preview */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.lb{border-collapse:collapse;width:100%;min-width:620px;font-size:12.5px;line-height:1.4}
+table.lb th,table.lb td{border:1px solid var(--line-strong);padding:6px 8px;text-align:left;vertical-align:top}
+table.lb th{background:var(--chip);font-weight:700}
+table.lb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.lb tfoot td{font-weight:700;background:var(--surface-2)}
+table.lb td.code{font-weight:600;white-space:nowrap}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--toast-bg);color:var(--toast-fg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;width:max-content;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* Trade packs. Module tuple: [name, hint, tasks, sample tools, sample materials [name, qty]] */
+var TRADES = {
+  electrician:{name:'Electrician', icon:'bolt', qual:'671101000', verified:true,
+    modules:[
+      ['Plan and prepare','Drawings, risk check, materials',['Read drawings','Risk assessment','Set out positions','Collect materials','Prepare tools'],['Tape measure','Spirit level'],[]],
+      ['Install, wire and connect','Chasing, trunking, cabling, DBs',['Chasing walls','Drilling and plugging','Fitting trunking','Fitting conduit','Pulling cable','Wiring DB board','Sockets and lights','Earthing'],['Hammer drill','Angle grinder','Side cutters'],[['PVC trunking 25 × 16 mm',8],['Surfix cable 2.5 mm²',30],['Fischer plugs 6 mm',16]]],
+      ['Test and inspect','Insulation, continuity, polarity',['Visual inspection','Earth continuity','Insulation resistance test','Polarity check','Earth leakage test','Record results'],['Insulation tester','Multimeter'],[]],
+      ['Commission','Power-on tests, handover',['Power-on tests','Earth leakage trip test','Check loads','Label DB board','Handover to client'],['Multimeter','Earth leakage tester'],[]],
+      ['Maintain and repair','Fault finding, replacing parts',['Fault finding','Replace breaker','Replace socket or switch','Repair cable','Planned maintenance'],['Multimeter','Voltage tester','Screwdriver set'],[['Socket outlet 16 A',1]]]
+    ],
+    tools:[['Angle grinder','power'],['Wall chaser','power'],['Hammer drill','power'],['Cordless drill','power'],['Side cutters','hand'],['Wire strippers','hand'],['Crimping tool','hand'],['Screwdriver set','hand'],['Hacksaw','hand'],['Conduit bender','hand'],['Fish tape','hand'],['Spirit level','measure'],['Tape measure','measure'],['Multimeter','test'],['Insulation tester','test'],['Voltage tester','test'],['Earth leakage tester','test']],
+    materials:[['PVC trunking 25 × 16 mm','m'],['Conduit 20 mm','m'],['Surfix cable 2.5 mm²','m'],['Surfix cable 1.5 mm²','m'],['Earth wire 4 mm²','m'],['Fischer plugs 6 mm','pcs'],['Screws 4 × 30 mm','pcs'],['Saddles 20 mm','pcs'],['Wall box, single','pcs'],['Wall box, double','pcs'],['Socket outlet 16 A','pcs'],['Light switch','pcs'],['Lamp holder','pcs'],['Circuit breaker 20 A','pcs'],['Earth leakage unit 63 A','pcs'],['Isolator switch','pcs'],['Cable ties','pcs'],['Insulation tape','rolls']],
+    ppe:['Safety glasses','Safety boots','Gloves','Ear muffs','Dust mask','Hard hat']},
+
+  plumber:{name:'Plumber', icon:'drop',
+    modules:[
+      ['Plan and prepare','Drawings, risk check, materials',['Read drawings','Risk assessment','Set out pipe runs','Collect materials','Prepare tools'],['Tape measure','Spirit level'],[]],
+      ['Install water supply','Copper, PEX, fittings',['Cutting pipe','Soldering copper joints','Compression fittings','Fixing pipe clips','Installing valves','Chasing walls'],['Pipe cutter','Blowtorch','Pipe bender'],[['Copper pipe 15 mm',12],['Elbows 15 mm',6],['Solder',1],['Pipe clips 15 mm',10]]],
+      ['Install drainage','Waste, soil, vents',['Laying drain pipes','Solvent welding PVC','Setting falls','Installing traps','Connecting to sewer'],['Hacksaw','Spirit level','Tape measure'],[['PVC waste pipe 50 mm',6],['PVC soil pipe 110 mm',4],['Solvent cement',1]]],
+      ['Install fixtures and geysers','Toilets, basins, geysers',['Fitting a toilet','Fitting basin and taps','Installing a geyser','Fitting safety valves','Connecting a shower'],['Adjustable spanner','Pipe wrench','Spirit level'],[['Pressure control valve',1],['PTFE tape',1],['Compression couplings 15 mm',4]]],
+      ['Test, maintain and repair','Pressure tests, leaks, blockages',['Pressure test','Finding leaks','Clearing blockages','Replacing washers and cartridges','Geyser maintenance'],['Pressure test pump','Drain rods','Adjustable spanner'],[['PTFE tape',1]]]
+    ],
+    tools:[['Pipe cutter','hand'],['Pipe wrench','hand'],['Pipe bender','hand'],['Hacksaw','hand'],['Adjustable spanner','hand'],['Drain rods','hand'],['Deburring tool','hand'],['Blowtorch','heat'],['Press tool','power'],['Hammer drill','power'],['Spirit level','measure'],['Tape measure','measure'],['Pressure test pump','test']],
+    materials:[['Copper pipe 15 mm','m'],['Copper pipe 22 mm','m'],['PEX pipe 16 mm','m'],['PVC waste pipe 50 mm','m'],['PVC soil pipe 110 mm','m'],['Elbows 15 mm','pcs'],['Tees 15 mm','pcs'],['Compression couplings 15 mm','pcs'],['Solder','rolls'],['Flux','tins'],['PTFE tape','rolls'],['Solvent cement','tins'],['Pipe clips 15 mm','pcs'],['Stopcock 15 mm','pcs'],['Pressure control valve','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Overalls','Knee pads','Dust mask']},
+
+  welder:{name:'Welder', icon:'flame',
+    modules:[
+      ['Plan and prepare','Drawings, symbols, machine set-up',['Read drawings and weld symbols','Risk assessment','Set up welding machine','Prepare joints','Clean and grind'],['Angle grinder','Wire brush'],[['Grinding discs',2]]],
+      ['Stick welding (SMAW)','Fillet, butt, all positions',['Fillet welds','Butt welds','Vertical welds','Overhead welds','Tack welding'],['Arc welder','Chipping hammer','Wire brush'],[['Electrodes E7018 3.2 mm',2],['Mild steel plate 6 mm',1]]],
+      ['MIG/MAG welding','Wire feed, gas, fillet and butt',['Fillet welds with MIG','Butt welds with MIG','Set wire speed and voltage','Change wire spool'],['MIG welder','Angle grinder','G-clamps'],[['MIG wire 0.9 mm',1],['Argon-CO2 mix gas',1],['Flat bar 50 × 6 mm',3]]],
+      ['TIG welding','Stainless, aluminium, root runs',['TIG on stainless steel','TIG on aluminium','Root runs','Filler rod control'],['TIG welder','Wire brush'],[['TIG filler rod',1],['Argon gas',1]]],
+      ['Cut, inspect and finish','Cutting, weld checks, grinding',['Oxy-fuel cutting','Plasma cutting','Visual weld inspection','Dye penetrant test','Grinding and finishing'],['Plasma cutter','Weld gauge','Angle grinder'],[['Cutting discs',3],['Dye penetrant kit',1]]]
+    ],
+    tools:[['Arc welder','power'],['MIG welder','power'],['TIG welder','power'],['Angle grinder','power'],['Plasma cutter','power'],['Oxy-acetylene set','heat'],['Chipping hammer','hand'],['Wire brush','hand'],['G-clamps','hand'],['Steel square','measure'],['Tape measure','measure'],['Weld gauge','test']],
+    materials:[['Electrodes E6013 2.5 mm','kg'],['Electrodes E7018 3.2 mm','kg'],['MIG wire 0.9 mm','kg'],['TIG filler rod','kg'],['Argon gas','cylinders'],['Argon-CO2 mix gas','cylinders'],['Mild steel plate 6 mm','sheets'],['Flat bar 50 × 6 mm','m'],['Angle iron 50 × 50 mm','m'],['Grinding discs','pcs'],['Cutting discs','pcs'],['Dye penetrant kit','sets']],
+    ppe:['Welding helmet','Welding gloves','Leather apron','Safety glasses','Safety boots','Ear muffs','Respirator']},
+
+  boilermaker:{name:'Boilermaker', icon:'beam',
+    modules:[
+      ['Plan and prepare','Drawings, take-off, risk check',['Read drawings','Risk assessment','Material take-off','Prepare tools'],['Tape measure','Steel square'],[]],
+      ['Mark off and cut','Templates, oxy-fuel, plasma',['Marking off','Making templates','Oxy-fuel cutting','Plasma cutting','Shearing'],['Scriber','Plasma cutter','Oxy-acetylene set'],[['Mild steel plate 10 mm',1],['Cutting discs',2]]],
+      ['Form and fabricate','Bending, rolling, fit-up',['Bending on the press brake','Rolling plate','Fit-up and tacking','Assembling structures','Drilling with a mag drill'],['Press brake','Plate rolls','G-clamps'],[['Mild steel plate 6 mm',2],['Angle iron 50 × 50 mm',12]]],
+      ['Weld','Fillet, butt, MIG, stick',['Fillet welds','Butt welds','MIG welding','Stick welding'],['MIG welder','Arc welder','Chipping hammer'],[['MIG wire 0.9 mm',2],['Argon-CO2 mix gas',1],['Electrodes E7018 3.2 mm',1]]],
+      ['Inspect, finish and install','Dimensions, weld checks, site',['Checking dimensions','Visual weld inspection','Grinding and finishing','Installing on site'],['Angle grinder','Tape measure','Magnetic drill'],[['Grinding discs',3],['Bolts M16',12],['Primer paint',2]]]
+    ],
+    tools:[['Arc welder','power'],['MIG welder','power'],['Plasma cutter','power'],['Angle grinder','power'],['Magnetic drill','power'],['Press brake','power'],['Plate rolls','power'],['Oxy-acetylene set','heat'],['Scriber','hand'],['G-clamps','hand'],['Chipping hammer','hand'],['Steel square','measure'],['Tape measure','measure']],
+    materials:[['Mild steel plate 6 mm','sheets'],['Mild steel plate 10 mm','sheets'],['I-beam 203 mm','m'],['Angle iron 50 × 50 mm','m'],['Flat bar 50 × 6 mm','m'],['Electrodes E7018 3.2 mm','kg'],['MIG wire 0.9 mm','kg'],['Argon-CO2 mix gas','cylinders'],['Grinding discs','pcs'],['Cutting discs','pcs'],['Bolts M16','pcs'],['Primer paint','l']],
+    ppe:['Welding helmet','Welding gloves','Leather apron','Safety glasses','Safety boots','Ear muffs','Hard hat']},
+
+  carpenter:{name:'Carpenter', icon:'hammer',
+    modules:[
+      ['Plan and prepare','Drawings, measuring, timber',['Read drawings','Risk assessment','Measure and mark out','Order timber','Prepare tools'],['Tape measure','Combination square'],[]],
+      ['Formwork and framing','Shuttering, walls, floors',['Building formwork','Stripping formwork','Wall framing','Floor joists'],['Circular saw','Claw hammer','Spirit level'],[['Shutter ply 18 mm',3],['Pine 38 × 114 mm',24],['Nails 75 mm',2]]],
+      ['Roofing and ceilings','Trusses, battens, fascias',['Setting up roof trusses','Purlins and battens','Fascia boards','Ceiling brandering'],['Nail gun','Circular saw','Tape measure'],[['Pine 38 × 38 mm',40],['Truss hangers',12],['Nails 75 mm',1]]],
+      ['Doors, windows and trim','Hanging, locks, skirtings',['Hanging doors','Fitting locks and hinges','Fitting window frames','Skirtings and architraves'],['Chisels','Cordless drill','Spirit level'],[['Hinges',2],['Door lock',1],['Wood screws 4 × 40 mm',16]]],
+      ['Joinery and finishing','Cupboards, joints, sanding',['Building cupboards','Cutting joints by hand','Sanding and finishing','Fitting shelving'],['Router','Jigsaw','Clamps'],[['MDF 16 mm',2],['Wood glue',1],['Sandpaper',6]]]
+    ],
+    tools:[['Circular saw','power'],['Jigsaw','power'],['Cordless drill','power'],['Router','power'],['Power planer','power'],['Nail gun','power'],['Hand saw','hand'],['Chisels','hand'],['Claw hammer','hand'],['Clamps','hand'],['Combination square','measure'],['Spirit level','measure'],['Tape measure','measure']],
+    materials:[['Pine 38 × 114 mm','m'],['Pine 38 × 38 mm','m'],['Shutter ply 18 mm','sheets'],['MDF 16 mm','sheets'],['Nails 75 mm','kg'],['Wood screws 4 × 40 mm','pcs'],['Wood glue','l'],['Hinges','pairs'],['Door lock','pcs'],['Skirting','m'],['Sandpaper','sheets'],['Truss hangers','pcs']],
+    ppe:['Safety glasses','Safety boots','Ear muffs','Dust mask','Gloves','Hard hat']},
+
+  millwright:{name:'Millwright', icon:'gear',
+    modules:[
+      ['Plan and prepare','Drawings, lockout, risk check',['Read drawings','Lockout and isolation','Risk assessment','Prepare tools'],['Multimeter','Spanner set'],[]],
+      ['Mechanical installation','Pumps, motors, alignment',['Installing pumps and motors','Shaft alignment','Fitting bearings','Fitting belts and pulleys','Gearbox work'],['Laser alignment kit','Bearing puller','Torque wrench'],[['Bearings',2],['V-belts',2],['Bolts M12',8]]],
+      ['Electrical installation','Motor wiring, starters, control',['Motor wiring','Starters and contactors','Control circuits','PLC inputs and outputs'],['Multimeter','Screwdriver set','Clamp meter'],[['Cable 2.5 mm²',20],['Contactors',1],['Cable lugs',12]]],
+      ['Test and commission','Insulation, rotation, run-up',['Insulation test','Motor rotation check','Run-up tests','Vibration check'],['Insulation tester','Clamp meter'],[]],
+      ['Maintain and repair','Fault finding, bearings, seals',['Fault finding','Replacing bearings','Replacing seals','Planned maintenance','Lubrication'],['Bearing puller','Dial indicator','Spanner set'],[['Oil seals',2],['Grease',1]]]
+    ],
+    tools:[['Angle grinder','power'],['Cordless drill','power'],['Bearing puller','hand'],['Torque wrench','hand'],['Spanner set','hand'],['Screwdriver set','hand'],['Dial indicator','measure'],['Vernier caliper','measure'],['Micrometer','measure'],['Multimeter','test'],['Insulation tester','test'],['Clamp meter','test'],['Laser alignment kit','test']],
+    materials:[['Bearings','pcs'],['Oil seals','pcs'],['V-belts','pcs'],['Grease','kg'],['Cable 2.5 mm²','m'],['Contactors','pcs'],['Overload relays','pcs'],['Cable lugs','pcs'],['Gasket material','sheets'],['Bolts M12','pcs'],['Lubricating oil','l'],['Cable ties','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Ear muffs','Hard hat','Overalls']},
+
+  mechfitter:{name:'Mechanical fitter', icon:'wrench',
+    modules:[
+      ['Plan and prepare','Drawings, lockout, risk check',['Read drawings','Lockout and isolation','Risk assessment','Prepare tools'],['Vernier caliper'],[]],
+      ['Fitting and assembly','Marking off, drilling, assembly',['Measuring and marking off','Drilling and tapping holes','Fitting bearings','Assembling components'],['Pedestal drill','Taps and dies','Vernier caliper'],[['Bolts M10',8],['Drill bits',2],['Bearings',2]]],
+      ['Machining','Turning, milling, grinding',['Turning on the lathe','Milling','Surface grinding','Thread cutting'],['Lathe','Micrometer','Vernier caliper'],[['Mild steel round bar 40 mm',1],['Cutting oil',1]]],
+      ['Pumps, valves and drives','Overhauls, alignment, couplings',['Pump overhaul','Valve repair','Shaft alignment','Belts and couplings'],['Dial indicator','Bearing puller','Torque wrench'],[['Oil seals',2],['O-rings',4],['Couplings',1]]],
+      ['Maintain and repair','Fault finding, seals, lubrication',['Fault finding','Replacing seals','Lubrication','Planned maintenance'],['Spanner set','Files'],[['Grease',1],['Gasket material',1]]]
+    ],
+    tools:[['Lathe','power'],['Milling machine','power'],['Pedestal drill','power'],['Angle grinder','power'],['Taps and dies','hand'],['Files','hand'],['Bearing puller','hand'],['Torque wrench','hand'],['Spanner set','hand'],['Vernier caliper','measure'],['Micrometer','measure'],['Dial indicator','measure']],
+    materials:[['Mild steel round bar 40 mm','m'],['Bearings','pcs'],['Oil seals','pcs'],['O-rings','pcs'],['Bolts M10','pcs'],['Gasket material','sheets'],['Grease','kg'],['Cutting oil','l'],['Drill bits','pcs'],['V-belts','pcs'],['Couplings','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Ear muffs','Overalls','Hard hat']},
+
+  diesel:{name:'Diesel mechanic', icon:'truck',
+    modules:[
+      ['Plan and prepare','Manuals, job cards, parts',['Read service manual','Job card and risk check','Prepare tools','Order parts'],['Socket set'],[]],
+      ['Engine','Service, valves, injectors, cooling',['Engine service','Valve clearance adjustment','Injector work','Cooling system','Engine overhaul'],['Feeler gauges','Torque wrench','Socket set'],[['Engine oil 15W-40',18],['Oil filter',1],['Fuel filter',2]]],
+      ['Transmission and drivetrain','Clutch, gearbox, diff',['Clutch replacement','Gearbox repair','Differential service','Prop shaft and universal joints'],['Trolley jack','Axle stands','Torque wrench'],[['Gaskets',2],['Hydraulic oil',4]]],
+      ['Brakes, steering and suspension','Air brakes, steering, springs',['Air brake service','Brake adjustment','Steering repair','Suspension repair'],['Impact wrench','Axle stands','Spanner set'],[['Brake linings',1],['Grease',1]]],
+      ['Electrical and diagnostics','Scan, starting, charging',['Diagnostics scan','Starting and charging','Lights and wiring','Road test'],['Diagnostic scanner','Multimeter'],[['Fuses',2]]]
+    ],
+    tools:[['Impact wrench','power'],['Torque wrench','hand'],['Socket set','hand'],['Spanner set','hand'],['Grease gun','hand'],['Trolley jack','hand'],['Axle stands','hand'],['Feeler gauges','measure'],['Diagnostic scanner','test'],['Multimeter','test'],['Compression tester','test']],
+    materials:[['Engine oil 15W-40','l'],['Oil filter','pcs'],['Fuel filter','pcs'],['Air filter','pcs'],['Coolant','l'],['Grease','kg'],['Brake linings','sets'],['Gaskets','pcs'],['V-belts','pcs'],['Hydraulic oil','l'],['Fuses','pcs'],['Cable ties','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Overalls','Ear muffs']},
+
+  automech:{name:'Automotive mechanic', icon:'car',
+    modules:[
+      ['Plan and prepare','Manuals, job cards, parts',['Read service manual','Job card and risk check','Prepare tools','Order parts'],['Socket set'],[]],
+      ['Engine service and repair','Services, timing, cooling',['Minor service','Major service','Timing belt replacement','Cooling system','Engine repair'],['Socket set','Torque wrench','Oil filter wrench'],[['Engine oil 5W-30',4],['Oil filter',1],['Spark plugs',4]]],
+      ['Brakes and suspension','Pads, discs, shocks',['Brake pads and discs','Bleeding brakes','Shocks and springs','Wheel alignment check'],['Trolley jack','Axle stands','Brake bleeder kit'],[['Brake pads',1],['Brake fluid',1]]],
+      ['Transmission and drivetrain','Clutch, CV joints, bearings',['Clutch replacement','CV joints','Gearbox oil change','Wheel bearings'],['Impact wrench','Torque wrench','Axle stands'],[['Grease',1],['Gaskets',1]]],
+      ['Electrical and diagnostics','Scan, battery, lights',['Diagnostics scan','Battery and charging','Lights','Road test'],['Diagnostic scanner','Multimeter'],[]]
+    ],
+    tools:[['Impact wrench','power'],['Torque wrench','hand'],['Socket set','hand'],['Spanner set','hand'],['Oil filter wrench','hand'],['Brake bleeder kit','hand'],['Grease gun','hand'],['Trolley jack','hand'],['Axle stands','hand'],['Feeler gauges','measure'],['Diagnostic scanner','test'],['Multimeter','test']],
+    materials:[['Engine oil 5W-30','l'],['Oil filter','pcs'],['Air filter','pcs'],['Spark plugs','pcs'],['Brake pads','sets'],['Brake fluid','l'],['Coolant','l'],['Timing belt kit','sets'],['Wiper blades','pairs'],['Grease','kg'],['Gaskets','pcs'],['Cable ties','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Overalls']},
+
+  autoelec:{name:'Auto electrician', icon:'battery',
+    modules:[
+      ['Plan and prepare','Wiring diagrams, job cards',['Read wiring diagrams','Job card and risk check','Prepare tools','Order parts'],['Multimeter'],[]],
+      ['Starting and charging','Batteries, starters, alternators',['Battery testing','Starter motor repair','Alternator repair','Charging circuit checks'],['Battery tester','Multimeter','Socket set'],[['Battery',1],['Terminals and lugs',4]]],
+      ['Lighting and wiring','Lights, harnesses, fuses',['Lighting repairs','Wiring harness repair','Fuses and relays','Fitting accessories'],['Crimping tool','Wire strippers','Soldering iron'],[['Auto cable 1.5 mm²',6],['Heat shrink',1],['Connectors',6]]],
+      ['Engine management','Scan, sensors, ignition',['Diagnostics scan','Sensor testing','ECU fault finding','Ignition systems'],['Diagnostic scanner','Oscilloscope','Multimeter'],[]],
+      ['Comfort and safety systems','Aircon, locking, alarms',['Air conditioning','Central locking','Electric windows','Alarms and immobilisers'],['Test light','Screwdriver set','Multimeter'],[['Relays',1],['Fuses',2]]]
+    ],
+    tools:[['Crimping tool','hand'],['Wire strippers','hand'],['Socket set','hand'],['Screwdriver set','hand'],['Soldering iron','heat'],['Heat gun','heat'],['Multimeter','test'],['Diagnostic scanner','test'],['Battery tester','test'],['Test light','test'],['Oscilloscope','test']],
+    materials:[['Auto cable 1.5 mm²','m'],['Auto cable 2.5 mm²','m'],['Terminals and lugs','pcs'],['Heat shrink','m'],['Fuses','pcs'],['Relays','pcs'],['Insulation tape','rolls'],['Cable ties','pcs'],['Battery','pcs'],['Bulbs','pcs'],['Solder','rolls'],['Connectors','pcs']],
+    ppe:['Safety glasses','Safety boots','Gloves','Overalls']},
+
+  solar:{name:'Solar PV technician', icon:'sun',
+    modules:[
+      ['Plan and prepare','Site survey, shading, heights',['Site survey','Shading check','Risk assessment for working at heights','Read single-line diagram'],['Tape measure','Irradiance meter'],[]],
+      ['Mount the array','Hooks, rails, panels',['Installing roof hooks and rails','Fixing panels','Earthing the frame','Sealing roof penetrations'],['Cordless drill','Torque wrench','Spirit level'],[['Roof hooks',12],['Mounting rails',16],['Solar panels',6],['Mid and end clamps',20]]],
+      ['DC wiring','Strings, MC4, isolators',['String wiring','Fitting MC4 connectors','Installing a DC isolator','Cable routing'],['MC4 crimping tool','Wire strippers','Multimeter'],[['PV cable 6 mm²',30],['MC4 connectors',4],['DC isolator',1]]],
+      ['Inverter and batteries','Mounting, AC side, set-up',['Mounting the inverter','Installing batteries','AC connection','Programming the inverter'],['Hammer drill','Spanner set','Multimeter'],[['Battery cables',2],['Surge arrester',1],['Conduit 25 mm',4]]],
+      ['Test and commission','Voc, insulation, handover',['Open-circuit voltage test','Insulation test','Polarity check','Commissioning and handover'],['Multimeter','Insulation tester','Clamp meter'],[]]
+    ],
+    tools:[['Cordless drill','power'],['Hammer drill','power'],['MC4 crimping tool','hand'],['Wire strippers','hand'],['Torque wrench','hand'],['Spanner set','hand'],['Spirit level','measure'],['Tape measure','measure'],['Multimeter','test'],['Insulation tester','test'],['Clamp meter','test'],['Irradiance meter','test']],
+    materials:[['Solar panels','pcs'],['Mounting rails','m'],['Roof hooks','pcs'],['Mid and end clamps','pcs'],['PV cable 6 mm²','m'],['MC4 connectors','pairs'],['DC isolator','pcs'],['Surge arrester','pcs'],['Earth wire 6 mm²','m'],['Conduit 25 mm','m'],['Battery cables','pcs'],['Cable ties','pcs']],
+    ppe:['Safety harness','Hard hat','Safety glasses','Gloves','Safety boots']}
+};
+var TRADE_ORDER = ['electrician','plumber','welder','boilermaker','carpenter','millwright','mechfitter','diesel','automech','autoelec','solar'];
+
+
+var COLLEGE = 'Africa Skills George Tech';
+/* Price and trial length shown in the app. The real charge is set by PRICE in Netlify. */
+var CFG = {price:29, trialDays:30, api:'/api'};
+var LEVELS = [
+  {id:'WE01', title:'I watched and helped', sub:'Observe and assist a qualified artisan', short:'Observe and assist'},
+  {id:'WE02', title:'I did it, mentor watched closely', sub:'Under direct supervision', short:'Under direct supervision'},
+  {id:'WE03', title:'I did it, mentor checked after', sub:'On my own, under supervision', short:'On own, under supervision'}
+];
+var UNITS = ['pcs','m','l','kg','rolls','sheets','sets','pairs','tins','cylinders'];
+Object.keys(TRADES).forEach(function(k){
+  var t = TRADES[k]; t.id = k;
+  t.mods = t.modules.map(function(m, i){ return {id:'WM-0' + (i + 1), name:m[0], hint:m[1], tasks:m[2], kit:m[3] || [], use:m[4] || []}; });
+});
+
+/* ---------- small helpers ---------- */
+var $app = document.getElementById('app');
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function pad(n){ return String(n).padStart(2, '0'); }
+function isoDate(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function parseISO(s){ var p = String(s).split('-').map(Number); return new Date(p[0], (p[1] || 1) - 1, p[2] || 1); }
+function todayISO(){ return isoDate(new Date()); }
+var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var DOWL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MON3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtShort(s){ var d = parseISO(s); return DOW[d.getDay()] + ' ' + d.getDate() + ' ' + MON3[d.getMonth()]; }
+function fmtLong(s){ var d = parseISO(s); return DOWL[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); }
+function fmtDay(s){ var d = parseISO(s); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); }
+function rangeLabel(a, b){
+  var x = parseISO(a), y = parseISO(b);
+  if (a === b) return fmtDay(a);
+  if (x.getFullYear() === y.getFullYear()){
+    if (x.getMonth() === y.getMonth()) return x.getDate() + ' to ' + y.getDate() + ' ' + MON[y.getMonth()] + ' ' + y.getFullYear();
+    return x.getDate() + ' ' + MON[x.getMonth()] + ' to ' + y.getDate() + ' ' + MON[y.getMonth()] + ' ' + y.getFullYear();
+  }
+  return fmtDay(a) + ' to ' + fmtDay(b);
+}
+function mins(t){ var p = String(t || '0:0').split(':').map(Number); return (p[0] || 0) * 60 + (p[1] || 0); }
+function hoursOf(e){ return Math.max(0, (mins(e.end) - mins(e.start) - (Number(e.breakMin) || 0)) / 60); }
+function fmtH(h){ return String(Math.round(h * 10) / 10); }
+function fmtQty(q){ return String(Math.round((Number(q) || 0) * 100) / 100); }
+function tr(id){ return TRADES[id] || TRADES.electrician; }
+function curTid(){ return TRADES[S.profile.trade] ? S.profile.trade : 'electrician'; }
+function tidOf(e){ return TRADES[e.trade] ? e.trade : 'electrician'; }
+function modOf(tid, id){ var ms = tr(tid).mods; for (var i = 0; i < ms.length; i++) if (ms[i].id === id) return ms[i]; return null; }
+function lvlOf(id){ for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].id === id) return LEVELS[i]; return null; }
+function codeOf(e){ return e.area + '-' + e.level; }
+function codeKey(e){ return tidOf(e) + '|' + codeOf(e); }
+function fullCode(e){ var t = tr(tidOf(e)); return (t.qual ? t.qual + '-' : '') + codeOf(e); }
+function qualLabel(tid){ var t = tr(tid); return 'Occupational Certificate: ' + t.name + (t.qual ? ' (' + t.qual + ')' : ''); }
+function unitOf(tid, name){ var m = tr(tid).materials.filter(function(x){ return x[0] === name; })[0]; return m ? m[1] : 'pcs'; }
+function toolKind(tid, name){ var m = tr(tid).tools.filter(function(x){ return x[0] === name; })[0]; return m ? m[1] : 'hand'; }
+function lowerFirst(s){ return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+function taskSentence(tasks){ return tasks.map(function(t, i){ return i ? lowerFirst(t) : t; }).join(', '); }
+function titleOf(e){
+  var t = e.tasks || [];
+  if (!t.length){ var m = modOf(tidOf(e), e.area); return m ? m.name : 'Work'; }
+  return taskSentence(t.slice(0, 2)) + (t.length > 2 ? ' +' + (t.length - 2) : '');
+}
+function weekStart(s){ var d = parseISO(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDate(d); }
+function uniq(a){ var seen = {}, out = []; a.forEach(function(x){ if (!seen[x]){ seen[x] = 1; out.push(x); } }); return out; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
+function matText(m){ var q = fmtQty(m.qty); return m.unit === 'pcs' ? q + ' ' + m.name : q + ' ' + m.unit + ' ' + m.name; }
+function workText(e){
+  var s = taskSentence(e.tasks || []) + '.';
+  if (e.materials && e.materials.length) s += ' ' + e.materials.map(matText).join(', ') + '.';
+  if (e.notes) s += ' ' + e.notes;
+  return s;
+}
+function statusTag(e){
+  if (e.status === 'signed') return '<span class="tag ok">Signed</span>';
+  if (e.status === 'waiting') return '<span class="tag warn">Waiting sign-off</span>';
+  return '<span class="tag">Not sent</span>';
+}
+function saveFile(name, blob){
+  return cap('downloads').then(function(dl){
+    if (dl) return dl.save({filename:name, data:blob});
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 5000);
+  });
+}
+function cap(name){
+  try { return (window.claude && typeof window.claude.use === 'function') ? Promise.resolve(window.claude.use(name)).catch(function(){ return null; }) : Promise.resolve(null); }
+  catch (e){ return Promise.resolve(null); }
+}
+
+/* ---------- icons ---------- */
+function I(d, sw, size){ size = size || 20; return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; }
+var IC = {
+  logo:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  flame:'<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3.5 2 3.5 0-3-1-5.5 1-9z"/>',
+  beam:'<path d="M5 4h14M5 20h14M12 4v16"/><path d="M8 4v2M16 4v2M8 18v2M16 18v2"/>',
+  hammer:'<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7 3.5 14.5a2.1 2.1 0 0 0 3 3L14 10"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+  truck:'<path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  car:'<path d="M4 15l1.5-5A2 2 0 0 1 7.4 8.5h9.2a2 2 0 0 1 1.9 1.5L20 15"/><rect x="3" y="15" width="18" height="4" rx="1"/><circle cx="7.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/>',
+  battery:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5M17 7V5M6.5 13h3M14.5 13h3M16 11.5v3"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  gauge:'<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><path d="M4 18h16"/>',
+  ruler:'<path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/>',
+  home:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
+  list:'<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3 6 1.5 1.5L7 5"/><path d="m3 12 1.5 1.5L7 11"/><path d="m3 18 1.5 1.5L7 17"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  back:'<path d="m15 18-6-6 6-6"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  check:'<path d="m5 12 5 5 9-10"/>',
+  camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  upload:'<path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 20h16"/>',
+  download:'<path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M4 20h16"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  file:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/>'
+};
+var KIND_ICON = {power:IC.bolt, hand:IC.wrench, test:IC.gauge, measure:IC.ruler, heat:IC.flame};
+
+/* ---------- storage: IndexedDB on this device, with fallbacks ---------- */
+var Store = {
+  mode:'memory', db:null, mem:{},
+  init:function(){
+    var self = this;
+    return new Promise(function(res){
+      var done = false;
+      function fallback(){
+        if (done) return; done = true; self.db = null;
+        try { localStorage.setItem('lb_probe', '1'); localStorage.removeItem('lb_probe'); self.mode = 'local'; } catch (e){ self.mode = 'memory'; }
+        res();
+      }
+      try {
+        if (!window.indexedDB) return fallback();
+        var r = indexedDB.open('bhala', 1);
+        r.onupgradeneeded = function(){ var d = r.result; if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos'); };
+        r.onsuccess = function(){ if (done) return; done = true; self.db = r.result; self.mode = 'idb'; res(); };
+        r.onerror = fallback; r.onblocked = fallback;
+        setTimeout(fallback, 4000);
+      } catch (e){ fallback(); }
+    });
+  },
+  req:function(r){ return new Promise(function(res, rej){ r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; }); },
+  os:function(name, mode){ return this.db.transaction(name, mode).objectStore(name); },
+  loadState:function(){
+    var self = this;
+    if (self.mode === 'idb') return self.req(self.os('kv', 'readonly').get('state')).catch(function(){ return null; });
+    if (self.mode === 'local'){ try { var s = localStorage.getItem('lb_state'); return Promise.resolve(s ? JSON.parse(s) : null); } catch (e){ return Promise.resolve(null); } }
+    return Promise.resolve(null);
+  },
+  saveState:function(st){
+    var self = this, data;
+    try { data = clone(st); } catch (e){ return Promise.resolve(false); }
+    if (self.mode === 'idb') return self.req(self.os('kv', 'readwrite').put(data, 'state')).then(function(){ return true; }).catch(function(){ return false; });
+    if (self.mode === 'local'){ try { localStorage.setItem('lb_state', JSON.stringify(data)); return Promise.resolve(true); } catch (e){ return Promise.resolve(false); } }
+    return Promise.resolve(false);
+  },
+  putPhoto:function(id, blob){
+    this.mem[id] = blob;
+    if (this.mode !== 'idb') return Promise.resolve();
+    return this.req(this.os('photos', 'readwrite').put(blob, id)).catch(function(){});
+  },
+  getPhoto:function(id){
+    var self = this;
+    if (self.mem[id]) return Promise.resolve(self.mem[id]);
+    if (self.mode !== 'idb') return Promise.resolve(null);
+    return self.req(self.os('photos', 'readonly').get(id)).then(function(b){ if (b) self.mem[id] = b; return b || null; }).catch(function(){ return null; });
+  },
+  delPhoto:function(id){
+    delete this.mem[id];
+    if (this.mode !== 'idb') return Promise.resolve();
+    return this.req(this.os('photos', 'readwrite').delete(id)).catch(function(){});
+  }
+};
+
+/* ---------- state ---------- */
+function defaultProfile(){ return {name:'', studentNo:'', employer:'', mentor:'', college:COLLEGE, trade:'electrician'}; }
+function rid(){
+  var a = new Uint8Array(12);
+  try { crypto.getRandomValues(a); } catch (e){ for (var i = 0; i < a.length; i++) a[i] = Math.random() * 256 | 0; }
+  return 'bh-' + Array.prototype.map.call(a, function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
+}
+function newPlan(){ return {uid:rid(), trialStart:Date.now(), email:'', pro:null}; }
+function cleanPlan(p){
+  p = p || {};
+  if (typeof p.uid !== 'string' || !/^[a-z0-9-]{8,64}$/.test(p.uid)) return newPlan();
+  var np = {uid:p.uid, trialStart:Number(p.trialStart) || Date.now(), email:String(p.email || '').slice(0, 100), pro:null};
+  if (p.pro && Number(p.pro.until) > 0) np.pro = {until:Number(p.pro.until), checkedAt:Number(p.pro.checkedAt) || 0, status:String(p.pro.status || '')};
+  return np;
+}
+var S = {v:2, profile:defaultProfile(), entries:[], draft:null, plan:newPlan()};
+var UI = {ready:false, view:'today', entryId:null, backTo:'history', err:'', histFilter:'all', histQuery:'', histCode:null,
+  confirmDel:false, matQuery:'', photoBusy:false, payState:'', remindAt:'16:30', saveFail:false, pendingRestore:null, setupTrade:null, copyText:'',
+  exp:{from:'', to:'', photos:true, busy:false, msg:''}};
+
+var saveTimer = null;
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    Store.saveState(S).then(function(ok){
+      var fail = !ok;
+      if (fail !== UI.saveFail){ UI.saveFail = fail; if (UI.view === 'today') render(); }
+    });
+  }, 150);
+}
+
+function sorted(){ return S.entries.slice().sort(function(a, b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : (a.start < b.start ? 1 : -1); }); }
+function statsOf(list, tid){
+  var dates = {}, hrs = 0, photos = 0, codes = {}, done = 0;
+  list.forEach(function(e){
+    dates[e.date] = 1; hrs += hoursOf(e); photos += (e.photos || []).length;
+    var c = codeKey(e); if (!codes[c]) codes[c] = {n:0, signed:0};
+    codes[c].n++; if (e.status === 'signed') codes[c].signed++;
+  });
+  tr(tid).mods.forEach(function(m){ LEVELS.forEach(function(l){ var c = codes[tid + '|' + m.id + '-' + l.id]; if (c && c.n >= 3) done++; }); });
+  return {days:Object.keys(dates).length, hrs:hrs, photos:photos, codes:codes, done:done, total:tr(tid).mods.length * LEVELS.length};
+}
+function codeStat(st, tid, code){ return st.codes[tid + '|' + code] || {n:0, signed:0}; }
+function tradeEntries(tid){ return S.entries.filter(function(e){ return tidOf(e) === tid; }); }
+function usage(field, tid){
+  var f = {};
+  tradeEntries(tid).forEach(function(e){ (e[field] || []).forEach(function(x){ f[x] = (f[x] || 0) + 1; }); });
+  return f;
+}
+function materialUsage(tid){
+  var f = {}, unit = {};
+  tradeEntries(tid).forEach(function(e){ (e.materials || []).forEach(function(m){ f[m.name] = (f[m.name] || 0) + 1; unit[m.name] = m.unit; }); });
+  return {f:f, unit:unit};
+}
+function isPhotoUsed(id){
+  return S.entries.some(function(e){ return (e.photos || []).some(function(p){ return p.id === id; }); }) ||
+    !!(S.draft && S.draft.photos.some(function(p){ return p.id === id; }));
+}
+function getEntry(){ for (var i = 0; i < S.entries.length; i++) if (S.entries[i].id === UI.entryId) return S.entries[i]; return null; }
+
+/* ---------- sample fortnight, clearly marked, for any trade ---------- */
+function sampleProfile(tid){ return {name:'Sipho Ndlovu', studentNo:'', employer:'Sample host employer, George', mentor:'J. Botha', college:COLLEGE, trade:tid || 'electrician'}; }
+function makeSamples(tid){
+  var t = tr(tid), days = [], d = new Date(); d.setHours(12, 0, 0, 0);
+  while (days.length < 10){ d.setDate(d.getDate() - 1); var k = d.getDay(); if (k !== 0 && k !== 6) days.push(isoDate(d)); }
+  var plan = [[1,1],[2,2],[4,2],[1,0],[0,2],[1,1],[3,1],[0,2],[1,1],[0,2]], seen = {};
+  return plan.map(function(pl, i){
+    var m = t.mods[pl[0]], n = seen[pl[0]] = (seen[pl[0]] || 0) + 1, off = (n - 1) * 2;
+    var tasks = uniq([m.tasks[off % m.tasks.length], m.tasks[(off + 1) % m.tasks.length]]);
+    return {id:'s' + i + uid(), trade:tid, date:days[i], start:'07:30', end:'16:00', breakMin:30, site:'Sample host employer, George',
+      area:m.id, level:LEVELS[pl[1]].id, tasks:tasks, tools:m.kit.slice(), ppe:t.ppe.slice(0, 3),
+      materials:m.use.map(function(u){ return {name:u[0], unit:unitOf(tid, u[0]), qty:u[1] + (n - 1)}; }),
+      photos:[], notes:i === 1 ? 'Checked the work with my mentor before closing up.' : '', status:(i === 0 || i === 2) ? 'waiting' : 'signed',
+      sample:true, createdAt:Date.now() - i * 86400000, updatedAt:Date.now()};
+  });
+}
+function hasSamples(){ return S.entries.some(function(e){ return e.sample; }); }
+var DAY = 86400000;
+function isPro(){ return !!(S.plan.pro && S.plan.pro.until > Date.now()); }
+function trialLeft(){ return Math.max(0, Math.ceil((S.plan.trialStart + CFG.trialDays * DAY - Date.now()) / DAY)); }
+function canUse(){ return isPro() || trialLeft() > 0 || hasSamples(); }
+function planBadge(){ return isPro() ? 'Pro' : hasSamples() ? 'Sample' : trialLeft() > 0 ? trialLeft() + (trialLeft() === 1 ? ' day' : ' days') + ' free' : 'Trial ended'; }
+function gate(){ if (canUse()) return false; UI.view = 'plan'; UI.err = ''; render(); top(); return true; }
+function onLiveSite(){ return /^https?:$/.test(location.protocol) && !/claude/.test(location.hostname); }
+function checkPro(){
+  if (!/^https?:$/.test(location.protocol)) return Promise.resolve(isPro());
+  return fetch(CFG.api + '/status?uid=' + encodeURIComponent(S.plan.uid), {cache:'no-store'}).then(function(r){
+    if (!r.ok) throw new Error('status ' + r.status);
+    return r.json();
+  }).then(function(j){
+    S.plan.pro = j.paidUntil ? {until:Number(j.paidUntil), checkedAt:Date.now(), status:String(j.status || '')} : null;
+    persist(); return !!j.active;
+  });
+}
+function waitForPayment(tries){
+  UI.payState = 'checking'; if (UI.view === 'plan') render();
+  checkPro().catch(function(){ return false; }).then(function(ok){
+    if (ok){ UI.payState = 'done'; render(); toast('Payment received. Bhala Pro is on.'); return; }
+    if (tries > 1) setTimeout(function(){ waitForPayment(tries - 1); }, 3000);
+    else { UI.payState = 'slow'; if (UI.view === 'plan') render(); }
+  });
+}
+function reminderIcs(time){
+  var hm = /^\d{2}:\d{2}$/.test(time) ? time.replace(':', '') : '1630';
+  var d = new Date(); d.setDate(d.getDate() + 1);
+  var url = location.origin + location.pathname;
+  var stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Bhala//Reminder//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
+    'UID:bhala-daily-' + S.plan.uid + '@bhala', 'DTSTAMP:' + stamp, 'DTSTART:' + isoDate(d).replace(/-/g, '') + 'T' + hm + '00', 'DURATION:PT10M',
+    'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', 'SUMMARY:Log today in Bhala', 'DESCRIPTION:Two minutes: log today’s work and tools. ' + url, 'URL:' + url,
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Log today in Bhala', 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n') + '\r\n';
+}
+function vPlan(){
+  var pro = isPro(), left = trialLeft(), p = S.plan, price = 'R' + CFG.price;
+  var out = subTop('Subscription', 'me') + '<main class="gut stack-lg">';
+  if (UI.payState === 'checking') out += '<div class="banner" role="status">' + I(IC.clock) + '<div class="stack-xs"><p class="fw6">Checking your payment…</p><p class="sm">PayFast usually confirms within a minute.</p></div></div>';
+  if (UI.payState === 'slow') out += '<div class="banner" role="status">' + I(IC.info) + '<div class="stack-xs"><p class="fw6">Payment not confirmed yet</p><p class="sm">If PayFast took your money, tap Check again in a few minutes. You’ll also get an email from PayFast.</p></div></div>';
+  if (pro){
+    out += '<section class="card stack"><div class="row"><span class="ico-tile ok">' + I(IC.check, 2.4) + '</span><div class="stack-xs"><h1 class="h2">Bhala Pro is on</h1>' +
+      '<p class="muted sm">Paid until ' + esc(fmtLong(isoDate(new Date(p.pro.until)))) + (p.pro.status === 'cancelled' ? ' · cancelled, no more payments' : ' · renews monthly') + '</p></div></div>' +
+      '<p class="sm">PayFast takes ' + price + ' each month. To cancel, use the link in PayFast’s email or ask us. Your logbook stays on your phone either way.</p>' +
+      '<button type="button" class="btn btn-ghost btn-block" data-act="checkPay">Check again</button></section>';
+  } else {
+    out += '<section class="stack-xs"><h1 class="h1">' + (hasSamples() ? 'Bhala is free for ' + CFG.trialDays + ' days' : left > 0 ? 'Free trial: ' + plural(left, 'day', 'days') + ' left' : 'Your free month is over') + '</h1>' +
+      '<p class="muted">' + (left > 0 || hasSamples() ? 'Then ' + price + ' a month to keep logging and print your logbook. Cancel any time.' :
+        'Your logged days are safe. You can still open, edit and back them up. Subscribe to log new days and print your logbook.') + '</p></section>';
+    out += '<section class="card stack"><p class="price"><b>' + price + '</b> a month</p>' +
+      '<ul class="ticks"><li>Log every work day in 2 minutes</li><li>Codes matched for your trade</li><li>Print your logbook as a PDF</li><li>Cancel any time</li></ul>' +
+      '<form id="subForm" class="stack" novalidate><label class="field">Your email (PayFast sends your receipt here)<input type="email" id="subEmail" name="email" autocomplete="email" inputmode="email" value="' + esc(p.email) + '" placeholder="you@example.com"></label>' + errBox() +
+      '<button type="submit" class="btn btn-primary btn-lg btn-block">Subscribe with PayFast</button>' +
+      '<p class="muted xs">You pay on PayFast’s secure page. Bhala never sees your card.</p></form></section>';
+    out += '<section class="stack-sm"><button type="button" class="btn btn-ghost btn-block" data-act="checkPay">I’ve paid. Check again</button>' +
+      '<p class="muted xs">New phone? Restore your backup on the Me screen. Your subscription comes with it.</p></section>';
+  }
+  out += '</main>';
+  return out;
+}
+function removeSamples(){ S.entries = S.entries.filter(function(e){ return !e.sample; }); }
+
+/* ---------- drafts ---------- */
+function newDraft(from, date){
+  var p = S.profile, tid = curTid(), t = tr(tid);
+  var d = {editId:null, trade:tid, step:1, date:date || todayISO(), start:'07:30', end:'16:00', breakMin:30, site:p.employer || '',
+    area:null, tasks:[], tools:[], ppe:t.ppe.slice(0, 2), materials:[], level:null, photos:[], notes:'', sendMentor:true};
+  if (from && tidOf(from) === tid){
+    d.start = from.start; d.end = from.end; d.breakMin = from.breakMin; d.site = from.site; d.area = from.area;
+    d.tasks = from.tasks.slice(); d.tools = from.tools.slice(); d.ppe = from.ppe.slice();
+    d.materials = from.materials.map(function(m){ return {name:m.name, unit:m.unit, qty:m.qty}; }); d.level = from.level;
+  }
+  return d;
+}
+function hoursLabel(d){
+  if (mins(d.end) <= mins(d.start)) return 'Finish time must be after start time.';
+  return fmtH(hoursOf(d)) + ' hours worked, after a ' + (Number(d.breakMin) || 0) + ' minute break';
+}
+function validate(step){
+  var d = S.draft;
+  if (step === 1){
+    if (!d.date) return 'Pick the date you did this work.';
+    if (d.date > todayISO()) return 'You can’t log a day that hasn’t happened yet.';
+    if (mins(d.end) <= mins(d.start)) return 'Finish time must be after start time.';
+    if (!d.area) return 'Pick the area you worked on.';
+    if (!d.tasks.length) return 'Tap at least one task you did.';
+  }
+  if (step === 4 && !d.level) return 'Choose how hands-on you were. It sets the level on your code.';
+  return '';
+}
+
+/* ---------- shared pieces ---------- */
+function logoMark(){ return '<span class="logo-mark">' + I(IC.logo, 2.2) + '</span>'; }
+function tradeIcon(tid, size){ return I(IC[tr(tid).icon] || IC.wrench, 2, size || 20); }
+function nav(active){
+  function it(v, label, icon){ return '<button type="button" class="nav-it" data-act="go" data-view="' + v + '"' + (active === v ? ' aria-current="page"' : '') + '>' + I(icon, active === v ? 2.3 : 2, 22) + '<span>' + label + '</span></button>'; }
+  var plusAct = (S.draft && !S.draft.editId) ? 'continueLog' : 'startLog';
+  return '<nav class="bar" aria-label="Main"><div class="bar-in nav-in">' + it('today', 'Today', IC.home) + it('history', 'History', IC.clock) +
+    '<button type="button" class="nav-plus" data-act="' + plusAct + '" aria-label="Log work">' + I(IC.plus, 2.6) + '</button>' +
+    it('codes', 'Codes', IC.list) + it('me', 'Me', IC.user) + '</div></nav>';
+}
+function pageHero(title, sub, extra){
+  return '<header class="hero"><div class="gut hero-in"><div class="stack-xs"><h1 class="hero-title">' + esc(title) + '</h1>' +
+    (sub ? '<p class="hero-sub">' + esc(sub) + '</p>' : '') + '</div>' + (extra || '') + '</div></header>';
+}
+function subTop(title, backView){
+  return '<header class="flowtop"><div class="gut flowtop-in"><div class="row-between">' +
+    '<button type="button" class="iconbtn" data-act="go" data-view="' + backView + '" aria-label="Back">' + I(IC.back, 2.2, 22) + '</button>' +
+    '<span class="fw6">' + esc(title) + '</span><span class="iconbtn-spacer"></span></div></div></header>';
+}
+function entryRow(e){
+  var d = parseISO(e.date), n = (e.photos || []).length, other = tidOf(e) !== curTid();
+  return '<button type="button" class="entry" data-act="openEntry" data-id="' + esc(e.id) + '">' +
+    '<span class="datebox"><span class="dow">' + DOW[d.getDay()].toUpperCase() + '</span><span class="dnum">' + d.getDate() + '</span></span>' +
+    '<span class="entry-main"><span class="entry-title">' + esc(titleOf(e)) + '</span>' +
+    '<span class="entry-meta">' + fmtH(hoursOf(e)) + ' h · ' + plural(n, 'photo', 'photos') + (other ? ' · ' + esc(tr(tidOf(e)).name) : '') + '</span>' +
+    '<span class="tags"><span class="tag">' + esc(codeOf(e)) + '</span>' + statusTag(e) + (e.sample ? '<span class="tag">Sample</span>' : '') + '</span></span></button>';
+}
+function errBox(){ return UI.err ? '<p class="err" role="alert">' + esc(UI.err) + '</p>' : ''; }
+function chip(label, on, act){
+  return '<button type="button" class="chip" aria-pressed="' + (on ? 'true' : 'false') + '" data-act="' + act + '" data-v="' + esc(label) + '">' + (on ? I(IC.check, 2.6) : '') + esc(label) + '</button>';
+}
+function tradeOptions(sel){ return TRADE_ORDER.map(function(k){ return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(TRADES[k].name) + '</option>'; }).join(''); }
+
+/* ---------- views ---------- */
+function weekStrip(){
+  var ws = parseISO(weekStart(todayISO())), today = todayISO(), cells = '';
+  for (var i = 0; i < 7; i++){
+    var d = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + i), iso = isoDate(d);
+    var logged = S.entries.some(function(e){ return e.date === iso; }), future = iso > today;
+    cells += '<button type="button" class="day' + (logged ? ' on' : '') + (iso === today ? ' today' : '') + '" data-act="dayTap" data-date="' + iso + '"' + (future ? ' disabled' : '') +
+      ' aria-label="' + esc(fmtLong(iso)) + (logged ? ', logged' : ', not logged') + '"><span class="dl">' + DOW[d.getDay()].charAt(0) + '</span><span class="dd">' + d.getDate() + '</span><span class="ddot"></span></button>';
+  }
+  return '<section class="card stack-sm"><div class="row-between"><h2 class="h3">This week</h2><span class="muted xs">Tap a day to log or view it</span></div><div class="week">' + cells + '</div></section>';
+}
+function vToday(){
+  var p = S.profile, tid = curTid(), first = (p.name || '').trim().split(/\s+/)[0];
+  var h = new Date().getHours(), greet = h < 12 ? 'Morning' : (h < 17 ? 'Afternoon' : 'Evening');
+  var today = todayISO();
+  var todays = sorted().filter(function(e){ return e.date === today; });
+  var st = statsOf(S.entries, tid), recent = sorted().slice(0, 3), last = sorted().filter(function(e){ return tidOf(e) === tid; })[0];
+  var out = '<header class="hero"><div class="gut hero-in">' +
+    '<div class="row-between"><span class="logo">' + logoMark() + 'Bhala</span><button type="button" class="testbadge" data-act="go" data-view="plan">' + esc(planBadge()) + '</button></div>' +
+    '<div class="stack-sm"><p class="hero-sub">' + esc(fmtLong(today)) + '</p>' +
+    '<h1 class="hero-title">' + greet + (first ? ', ' + esc(first) : '') + '</h1>' +
+    '<span class="tradechip">' + tradeIcon(tid, 18) + esc(tr(tid).name) + ' apprentice · ' + esc(p.college || COLLEGE) + '</span></div></div></header>';
+  out += '<main class="gut has-bar">';
+  if (UI.saveFail || Store.mode === 'memory'){
+    out += '<div class="banner warn" role="alert">' + I(IC.info) + '<div class="stack-xs"><p class="fw6">This browser isn’t saving your logbook</p>' +
+      '<p class="sm">Your entries will be lost when you close it. Open the link in a normal (not private) browser window, or make a backup from the Me screen.</p></div></div>';
+  }
+  if (!canUse()){
+    out += '<div class="banner">' + I(IC.info) + '<div class="stack-sm" style="flex:1;min-width:0"><p class="fw6">Your free month is over</p>' +
+      '<p class="sm">Keep logging and print your logbook for R' + CFG.price + ' a month. Your logged days are safe.</p>' +
+      '<button type="button" class="btn btn-primary" data-act="go" data-view="plan">See subscription</button></div></div>';
+  }
+  if (hasSamples()){
+    out += '<div class="banner">' + I(IC.info) + '<div class="stack-sm" style="flex:1;min-width:0"><p class="fw6">You’re looking at a sample fortnight</p>' +
+      '<p class="sm">Open entries, check the codes, download the PDF. Then start your own logbook and the samples go away.</p>' +
+      '<label class="field">Show the sample for<select id="sampleTrade" data-field="sampleTrade">' + tradeOptions(tid) + '</select></label>' +
+      '<button type="button" class="btn btn-primary" data-act="startOwn">Start my own logbook</button></div></div>';
+  }
+  if (S.draft && !S.draft.editId){
+    out += '<section class="card stack"><div class="row"><span class="ico-tile">' + I(IC.edit) + '</span><div class="stack-xs"><h2 class="h2">Finish your log</h2>' +
+      '<p class="muted sm">For ' + esc(fmtShort(S.draft.date)) + ', stopped at step ' + S.draft.step + ' of 5</p></div></div>' +
+      '<div class="grid2"><button type="button" class="btn btn-primary" data-act="continueLog">Continue</button><button type="button" class="btn btn-ghost" data-act="discardDraft">Discard</button></div></section>';
+  } else if (todays.length){
+    out += '<section class="card stack"><div class="row"><span class="ico-tile ok">' + I(IC.check, 2.4) + '</span><div class="stack-xs"><h2 class="h2">Today is logged</h2>' +
+      '<p class="muted sm">' + esc(todays.map(codeOf).join(', ')) + ' · ' + fmtH(todays.reduce(function(a, e){ return a + hoursOf(e); }, 0)) + ' hours</p></div></div>' +
+      '<div class="grid2"><button type="button" class="btn btn-ghost" data-act="openEntry" data-id="' + esc(todays[0].id) + '">View</button>' +
+      '<button type="button" class="btn btn-ghost" data-act="startLog">' + I(IC.plus, 2.4) + 'Log more</button></div></section>';
+  } else {
+    out += '<section class="card stack"><div class="row-top"><span class="ico-tile">' + I(IC.clock) + '</span><div class="stack-xs"><h2 class="h2">Today isn’t logged yet</h2>' +
+      '<p class="muted sm">5 quick steps · about 2 minutes</p></div></div>' +
+      '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="startLog">' + I(IC.plus, 2.6) + 'Log today’s work</button>' +
+      (last ? '<button type="button" class="btn btn-ghost btn-block" data-act="startLog" data-copy="1">' + I(IC.copy) + 'Start from my last entry</button>' : '') +
+      '</section>';
+  }
+  out += weekStrip();
+  out += '<div class="stats">' +
+    '<div class="stat"><b>' + st.days + '</b><span>days logged</span></div>' +
+    '<div class="stat"><b>' + fmtH(st.hrs) + '</b><span>hours</span></div>' +
+    '<button type="button" class="stat" data-act="go" data-view="codes"><b>' + st.done + '<small>/' + st.total + '</small></b><span>codes done</span><span class="meter" aria-hidden="true"><i style="width:' + Math.round(st.done / st.total * 100) + '%"></i></span></button>' +
+    '</div>';
+  out += '<section class="stack-sm"><div class="row-between"><h2 class="h3">Recent</h2>' +
+    (S.entries.length ? '<button type="button" class="linkbtn" data-act="go" data-view="history">See all</button>' : '') + '</div>';
+  if (recent.length) out += '<div class="entries">' + recent.map(entryRow).join('') + '</div>';
+  else out += '<div class="card empty"><p class="fw6">No entries yet</p><p class="muted sm">Log your first day and it shows up here.</p></div>';
+  out += '</section></main>' + nav('today');
+  return out;
+}
+
+function histFiltered(){
+  var q = UI.histQuery.trim().toLowerCase(), wk = weekStart(todayISO());
+  return sorted().filter(function(e){
+    if (UI.histCode && codeKey(e) !== UI.histCode) return false;
+    if (UI.histFilter === 'waiting' && e.status !== 'waiting') return false;
+    if (UI.histFilter === 'photos' && !(e.photos || []).length) return false;
+    if (UI.histFilter === 'week' && weekStart(e.date) !== wk) return false;
+    if (q){
+      var hay = [titleOf(e), (e.tasks || []).join(' '), (e.tools || []).join(' '), (e.materials || []).map(function(m){ return m.name; }).join(' '), codeOf(e), e.notes, e.site, tr(tidOf(e)).name].join(' ').toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+function histListHtml(){
+  var list = histFiltered();
+  if (!list.length){
+    return '<div class="card empty"><p class="fw6">' + (S.entries.length ? 'Nothing matches' : 'No entries yet') + '</p><p class="muted sm">' +
+      (S.entries.length ? 'Try another search or filter.' : 'Tap the orange + to log your first day.') + '</p></div>';
+  }
+  var out = '', curMonth = '', group = [];
+  function flush(){ if (group.length){ out += '<h2 class="month">' + esc(curMonth) + '</h2><div class="entries">' + group.join('') + '</div>'; group = []; } }
+  list.forEach(function(e){
+    var d = parseISO(e.date), m = MON[d.getMonth()] + ' ' + d.getFullYear();
+    if (m !== curMonth){ flush(); curMonth = m; }
+    group.push(entryRow(e));
+  });
+  flush();
+  return out;
+}
+function vHistory(){
+  var filters = [['all','All'],['waiting','Waiting sign-off'],['photos','Has photos'],['week','This week']];
+  var st = statsOf(S.entries, curTid());
+  var out = pageHero('History', plural(st.days, 'day', 'days') + ' logged · ' + fmtH(st.hrs) + ' hours',
+    '<div class="searchbox">' + I(IC.search) + '<label class="sr-only" for="histQuery">Search your logbook</label>' +
+    '<input type="search" id="histQuery" data-field="histQuery" placeholder="Search tasks, tools or codes" value="' + esc(UI.histQuery) + '"></div>');
+  out += '<main class="gut has-bar">';
+  var codeLabel = UI.histCode ? UI.histCode.split('|')[1] : '';
+  out += '<div class="chips">' + filters.map(function(f){
+    return '<button type="button" class="chip" aria-pressed="' + (UI.histFilter === f[0]) + '" data-act="histFilter" data-f="' + f[0] + '">' + f[1] + '</button>';
+  }).join('') + (UI.histCode ? '<button type="button" class="chip" aria-pressed="true" data-act="clearCode" aria-label="Clear code filter ' + esc(codeLabel) + '">' + esc(codeLabel) + I(IC.x, 2.4) + '</button>' : '') + '</div>';
+  out += '<div class="stack-sm" id="histList">' + histListHtml() + '</div></main>' + nav('history');
+  return out;
+}
+
+function summaryText(e){
+  var t = tr(tidOf(e)), lines = ['Bhala logbook entry', fmtLong(e.date) + ' · ' + e.start + ' to ' + e.end + ' (' + fmtH(hoursOf(e)) + ' h)',
+    t.name + ' · code ' + fullCode(e), 'Tasks: ' + taskSentence(e.tasks || [])];
+  if ((e.tools || []).length) lines.push('Tools: ' + e.tools.join(', '));
+  if ((e.materials || []).length) lines.push('Materials: ' + e.materials.map(matText).join(', '));
+  if (e.notes) lines.push('Notes: ' + e.notes);
+  if (S.profile.name) lines.push('Apprentice: ' + S.profile.name);
+  return lines.join('\n');
+}
+function vEntry(){
+  var e = getEntry();
+  if (!e){ UI.view = 'history'; return vHistory(); }
+  var tid = tidOf(e), t = tr(tid), m = modOf(tid, e.area), l = lvlOf(e.level), n = (e.photos || []).length;
+  var out = subTop('Logbook entry', UI.backTo || 'history');
+  out += '<main class="gut has-bar">';
+  out += '<section class="stack-xs"><p class="accent-text sm fw6">' + esc(fmtLong(e.date)) + '</p><h1 class="h1">' + esc(titleOf(e)) + '</h1>' +
+    '<div class="tags">' + statusTag(e) + (e.sample ? '<span class="tag">Sample</span>' : '') + '</div></section>';
+  out += '<section class="codecard"><span class="k">' + esc(t.name) + ' logbook code</span><span class="code">' + esc(fullCode(e)) + '</span>' +
+    '<span class="desc">' + esc((m ? m.name : '') + ', ' + (l ? lowerFirst(l.short) : '')) + '</span>' + (t.verified ? '' : '<span class="draft">Draft code, confirm with your facilitator</span>') + '</section>';
+  out += '<dl class="card dl">' +
+    dlRow('Hours', fmtH(hoursOf(e)) + ' hours, ' + esc(e.start) + ' to ' + esc(e.end)) +
+    dlRow('Company', esc(e.site || '-')) +
+    dlRow('Tasks', esc(taskSentence(e.tasks || []))) +
+    dlRow('Tools', esc((e.tools || []).join(', ') || '-')) +
+    dlRow('Safety gear', esc((e.ppe || []).join(', ') || '-')) +
+    dlRow('Hands-on', esc(l ? l.title : '-')) + '</dl>';
+  if ((e.materials || []).length){
+    out += '<section class="stack-sm"><h2 class="h3">Materials</h2><ul class="mat-list">' + e.materials.map(function(mm){
+      return '<li class="mat"><span class="mat-name">' + esc(mm.name) + '</span><span class="fw6">' + esc(fmtQty(mm.qty)) + ' ' + esc(mm.unit) + '</span></li>';
+    }).join('') + '</ul></section>';
+  }
+  out += '<section class="stack-sm"><h2 class="h3">Photos <span class="muted fw4 sm">· ' + n + '</span></h2>' +
+    (n ? '<div class="thumbs big">' + e.photos.map(function(ph){ return '<figure class="thumb"><img data-photo="' + esc(ph.id) + '" alt="Photo of the work on ' + esc(fmtShort(e.date)) + '"><span class="miss">Photo not on this device</span></figure>'; }).join('') + '</div>'
+       : '<p class="muted sm">No photos on this entry.</p>') + '</section>';
+  if (e.notes) out += '<section class="stack-sm"><h2 class="h3">Notes</h2><p class="card">' + esc(e.notes) + '</p></section>';
+  out += '<section class="stack-sm"><div class="grid2">' +
+    '<button type="button" class="btn btn-ghost" data-act="editEntry">' + I(IC.edit) + 'Edit</button>' +
+    '<button type="button" class="btn btn-ghost" data-act="toggleSigned">' + (e.status === 'signed' ? 'Undo sign-off' : I(IC.check, 2.4) + 'Mentor signed') + '</button></div>' +
+    '<button type="button" class="btn btn-ghost btn-block" data-act="copySummary">' + I(IC.chat) + 'Copy for WhatsApp</button>';
+  if (UI.copyText){
+    out += '<label class="field">Copy this text and send it to your mentor<textarea id="copyBox" class="copybox" readonly>' + esc(UI.copyText) + '</textarea></label>';
+  }
+  out += '<p class="muted xs">Tap “Mentor signed” once your mentor has signed this day in your printed logbook.</p>';
+  if (UI.confirmDel){
+    out += '<div class="banner warn" role="alert">' + I(IC.trash) + '<div class="stack-sm" style="flex:1;min-width:0"><p class="fw6">Delete this entry and its photos?</p><p class="sm">This can’t be undone.</p>' +
+      '<div class="grid2"><button type="button" class="btn btn-danger" data-act="confirmDelete">Delete</button><button type="button" class="btn btn-ghost" data-act="cancelDelete">Keep it</button></div></div></div>';
+  } else {
+    out += '<button type="button" class="btn btn-ghost btn-block" data-act="askDelete">' + I(IC.trash) + 'Delete entry</button>';
+  }
+  out += '</section></main>' + nav(UI.backTo === 'today' ? 'today' : 'history');
+  return out;
+}
+function dlRow(k, vHtml){ return '<div class="dl-row"><dt>' + esc(k) + '</dt><dd>' + vHtml + '</dd></div>'; }
+
+function vCodes(){
+  var tid = curTid(), t = tr(tid), st = statsOf(S.entries, tid);
+  var out = pageHero('Your logbook codes', qualLabel(tid),
+    '<div class="stack-sm"><div class="row-between"><span style="font-family:var(--font-display);font-size:30px;font-weight:700">' + st.done +
+    '<span style="font-size:18px;color:var(--on-brand-muted);font-weight:500"> of ' + st.total + ' done</span></span><span class="hero-sub">3 entries each</span></div>' +
+    '<span class="meter" aria-hidden="true"><i style="width:' + Math.round(st.done / st.total * 100) + '%"></i></span></div>');
+  out += '<main class="gut has-bar">';
+  if (!t.verified){
+    out += '<div class="banner">' + I(IC.info) + '<div class="stack-xs"><p class="fw6">Draft code list for ' + esc(t.name) + '</p><p class="sm">The work areas follow the usual ' + esc(lowerFirst(t.name)) + ' practical. Your facilitator confirms the final codes before you hand in.</p></div></div>';
+  }
+  out += '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="go" data-view="logbook">' + I(IC.file) + 'See logbook and download PDF</button>';
+  t.mods.forEach(function(m){
+    var doneN = LEVELS.filter(function(l){ return codeStat(st, tid, m.id + '-' + l.id).n >= 3; }).length;
+    out += '<section class="card stack-sm"><div class="row"><span class="tag">' + m.id + '</span><h2 class="h3" style="flex:1;min-width:0">' + esc(m.name) + '</h2><span class="muted xs fw6">' + doneN + '/3 done</span></div><div class="lvls">';
+    LEVELS.forEach(function(l){
+      var code = m.id + '-' + l.id, c = codeStat(st, tid, code), full = c.n >= 3, dots = '';
+      for (var k = 0; k < 3; k++) dots += '<i class="' + (k < c.n ? 'on' : '') + '"></i>';
+      out += '<button type="button" class="lvl' + (full ? ' done' : '') + '" data-act="codeTile" data-code="' + tid + '|' + code + '" aria-label="' + code + ': ' + c.n + ' of 3 entries. Show entries">' +
+        '<span class="lvl-top"><span>' + l.id + '</span><span>' + Math.min(c.n, 99) + '/3</span></span><span class="lvl-dots">' + dots + '</span></button>';
+    });
+    out += '</div></section>';
+  });
+  out += '<p class="muted xs">WE01 observe and assist · WE02 under direct supervision · WE03 on own, under supervision. Tap a code to see its entries.' +
+    (t.verified ? ' Code list follows the QCTO ' + esc(t.name) + ' curriculum (' + esc(t.qual) + '); check with your facilitator that it matches your logbook.' : '') + '</p>';
+  out += '</main>' + nav('codes');
+  return out;
+}
+
+function rangeEntries(){
+  var tid = curTid();
+  return S.entries.filter(function(e){ return tidOf(e) === tid && (!UI.exp.from || e.date >= UI.exp.from) && (!UI.exp.to || e.date <= UI.exp.to); })
+    .sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.start < b.start ? -1 : 1); });
+}
+function weeksOf(list){
+  var map = {}, keys = [];
+  list.forEach(function(e){ var w = weekStart(e.date); if (!map[w]){ map[w] = []; keys.push(w); } map[w].push(e); });
+  keys.sort();
+  return keys.map(function(k){ return {w:k, es:map[k]}; });
+}
+function weekLabel(es){ return 'Week of ' + rangeLabel(es[0].date, es[es.length - 1].date); }
+function lbPreviewHtml(){
+  var list = rangeEntries();
+  if (!list.length) return '<div class="card empty"><p class="fw6">No ' + esc(lowerFirst(tr(curTid()).name)) + ' entries in these dates</p><p class="muted sm">Change the dates above.</p></div>';
+  var st = statsOf(list, curTid());
+  var out = '<p class="muted sm">' + plural(list.length, 'entry', 'entries') + ' · ' + fmtH(st.hrs) + ' hours · ' + plural(weeksOf(list).length, 'week', 'weeks') + ' · ' + plural(st.photos, 'photo', 'photos') + '</p>';
+  weeksOf(list).forEach(function(wk){
+    var tot = wk.es.reduce(function(a, e){ return a + hoursOf(e); }, 0);
+    out += '<section class="card stack-sm"><h2 class="h3">' + esc(weekLabel(wk.es)) + '</h2><div class="table-wrap"><table class="lb"><thead><tr>' +
+      '<th scope="col" style="width:62px">Date</th><th scope="col">Work done and materials</th><th scope="col" style="width:120px">Tools</th><th scope="col" style="width:96px">Code</th><th scope="col" style="width:40px">Hrs</th><th scope="col" style="width:62px">Mentor</th></tr></thead><tbody>' +
+      wk.es.map(function(e){
+        return '<tr><td>' + esc(fmtShort(e.date)) + '</td><td>' + esc(workText(e)) + '</td><td>' + esc((e.tools || []).join(', ') || '-') + '</td><td class="code">' + esc(codeOf(e)) +
+          '</td><td class="num">' + fmtH(hoursOf(e)) + '</td><td>' + (e.status === 'signed' ? 'Signed' : '') + '</td></tr>';
+      }).join('') +
+      '</tbody><tfoot><tr><td colspan="4">Total hours this week</td><td class="num">' + fmtH(tot) + '</td><td></td></tr></tfoot></table></div></section>';
+  });
+  return out;
+}
+function initExport(){
+  var all = tradeEntries(curTid()).map(function(e){ return e.date; }).sort();
+  UI.exp.from = all[0] || todayISO(); UI.exp.to = all[all.length - 1] || todayISO(); UI.exp.msg = ''; UI.exp.busy = false;
+}
+function vLogbook(){
+  var out = subTop('Logbook', 'codes');
+  out += '<main class="gut">';
+  out += '<section class="stack-xs"><h1 class="h1">Your logbook</h1><p class="muted">' + esc(qualLabel(curTid())) + '. Pick the dates, check the preview, then download a PDF to print, sign and hand in.</p></section>';
+  out += '<section class="card stack"><div class="grid2">' +
+    '<label class="field">From<input type="date" id="expFrom" data-field="expFrom" value="' + esc(UI.exp.from) + '"></label>' +
+    '<label class="field">To<input type="date" id="expTo" data-field="expTo" value="' + esc(UI.exp.to) + '"></label></div>' +
+    '<label class="check"><input type="checkbox" id="expPhotos" data-field="expPhotos"' + (UI.exp.photos ? ' checked' : '') + '><span class="stack-xs"><span class="fw6">Add photo pages</span><span class="muted xs">Your photos as evidence at the back</span></span></label>' +
+    '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="exportPdf"' + (UI.exp.busy ? ' disabled' : '') + '>' + I(IC.download, 2.2) + (UI.exp.busy ? 'Making your PDF…' : 'Download PDF') + '</button>' +
+    (UI.exp.msg ? '<p class="sm fw6" role="status">' + esc(UI.exp.msg) + '</p>' : '') + '</section>';
+  out += '<div class="stack-sm" id="lbPreview">' + lbPreviewHtml() + '</div>';
+  out += '</main>';
+  return out;
+}
+
+function profileFields(p, prefix){
+  function f(id, label, val, ph, auto){ return '<label class="field">' + label + '<input type="text" id="' + prefix + id + '" name="' + id + '" value="' + esc(val) + '" placeholder="' + esc(ph) + '"' + (auto ? ' autocomplete="' + auto + '"' : '') + '></label>'; }
+  return f('name', 'Your full name', p.name, 'e.g. Thandi Mokoena', 'name') +
+    f('studentNo', 'Student number', p.studentNo, 'From your college card', 'off') +
+    f('employer', 'Host employer', p.employer, 'Company you do your practical at', 'organization') +
+    f('mentor', 'Mentor (qualified artisan)', p.mentor, 'Who signs your logbook', 'off') +
+    f('college', 'College', p.college || COLLEGE, COLLEGE, 'off');
+}
+function tradePicker(sel){
+  return '<div class="trades" role="radiogroup" aria-label="Your trade">' + TRADE_ORDER.map(function(k){
+    return '<button type="button" class="trade" role="radio" aria-checked="' + (k === sel) + '" aria-pressed="' + (k === sel) + '" data-act="pickTrade" data-id="' + k + '"><span class="ti">' + tradeIcon(k, 20) + '</span>' + esc(TRADES[k].name) + '</button>';
+  }).join('') + '</div>';
+}
+function vMe(){
+  var p = S.profile, tid = curTid();
+  var storeMsg = Store.mode === 'idb' ? 'Your logbook and photos are saved on this device.'
+    : Store.mode === 'local' ? 'Entries are saved on this device. Photos are kept only until you close the app, so back up often.'
+    : 'This browser isn’t letting Bhala save. Back up before you close it.';
+  var out = pageHero('Me', p.name ? p.name + ' · ' + lowerFirst(tr(tid).name) + ' apprentice' : 'Your details go on every logbook page');
+  out += '<main class="gut has-bar">';
+  out += '<section class="card row-between"><div class="stack-xs"><h2 class="h2">Subscription</h2><p class="muted sm">' + esc(isPro() ? 'Bhala Pro is on' : hasSamples() ? 'Free for ' + CFG.trialDays + ' days once you start' : trialLeft() > 0 ? 'Free trial: ' + plural(trialLeft(), 'day', 'days') + ' left' : 'Free trial ended') + '</p></div>' +
+    '<button type="button" class="btn btn-ghost" data-act="go" data-view="plan">' + (isPro() ? 'Manage' : 'Subscribe') + '</button></section>';
+  out += '<form class="card stack" id="profileForm" novalidate><h2 class="h2">Your details</h2>' +
+    '<label class="field">Trade<select id="p-trade" name="trade">' + tradeOptions(tid) + '</select></label>' + profileFields(p, 'p-') +
+    '<button type="submit" class="btn btn-primary btn-block">Save details</button></form>';
+  out += '<section class="card stack"><h2 class="h2">Your data</h2><p class="muted sm">' + esc(storeMsg) + '</p>';
+  if (UI.pendingRestore){
+    out += '<div class="banner warn">' + I(IC.info) + '<div class="stack-sm" style="flex:1;min-width:0"><p class="fw6">Replace your logbook with this backup?</p><p class="sm">It has ' +
+      plural(UI.pendingRestore.entries.length, 'entry', 'entries') + '. Everything on this device now will be replaced.</p>' +
+      '<div class="grid2"><button type="button" class="btn btn-danger" data-act="applyRestore">Replace</button><button type="button" class="btn btn-ghost" data-act="cancelRestore">Cancel</button></div></div></div>';
+  }
+  out += '<div class="grid2"><button type="button" class="btn btn-ghost" data-act="backup">' + I(IC.download) + 'Back up</button>' +
+    '<input type="file" id="restoreFile" accept="application/json,.json" class="sr-only" data-file="restore"><label class="btn btn-ghost" for="restoreFile">' + I(IC.upload) + 'Restore</label></div>' +
+    '<p class="muted xs">A backup is one file with all your entries and photos. Use it to move to a new phone.</p>';
+  if (hasSamples()) out += '<button type="button" class="btn btn-ghost btn-block" data-act="removeSamples">' + I(IC.trash) + 'Remove sample entries</button>';
+  out += '</section>';
+  out += '<section class="card stack-sm"><h2 class="h2">Daily reminder</h2>' +
+    '<p class="sm">Adds a reminder to your phone’s calendar every work day, so you never miss a day.</p>' +
+    '<div class="grid2"><label class="field">Remind me at<input type="time" id="remindAt" data-field="remindAt" value="' + esc(UI.remindAt) + '"></label>' +
+    '<button type="button" class="btn btn-ghost" data-act="reminder" style="align-self:end">Add reminder</button></div>' +
+    '<p class="muted xs">Open the downloaded file and tap Add to calendar.</p></section>';
+  out += '<section class="card stack-sm"><h2 class="h2">About Bhala</h2>' +
+    '<p class="sm"><b>Bhala</b> means “write” in isiZulu and isiXhosa. <i>Bhala umsebenzi wakho</i>: write your work.</p>' +
+    '<p class="sm">The daily logbook for apprentices in all ' + TRADE_ORDER.length + ' trades. Everything you log stays on this phone. Back up every month in case you lose it.</p>' +
+    '<p class="sm"><a href="/privacy.html">Privacy</a> · <a href="/">Bhala website</a></p></section>';
+  out += '</main>' + nav('me');
+  return out;
+}
+function vSetup(){
+  var p = defaultProfile(), sel = UI.setupTrade || curTid();
+  var out = '<header class="hero"><div class="gut hero-in"><span class="logo">' + logoMark() + 'Bhala</span>' +
+    '<div class="stack-xs"><h1 class="hero-title">Start your logbook</h1><p class="hero-sub">Pick your trade, then add your details. They go at the top of every printed page.</p></div></div></header>';
+  out += '<main class="gut"><section class="stack-sm"><h2 class="h3">Your trade</h2>' + tradePicker(sel) + '</section>' +
+    '<form class="card stack" id="setupForm" novalidate>' + profileFields(p, 's-') + errBox() +
+    '<button type="submit" class="btn btn-primary btn-lg btn-block">Start logging</button>' +
+    '<p class="muted xs">The sample entries will be removed. You can change these details later on the Me screen.</p></form>' +
+    '<button type="button" class="btn btn-ghost btn-block" data-act="go" data-view="today">Keep exploring the sample</button></main>';
+  return out;
+}
+
+/* ---------- log flow ---------- */
+var STEP_TITLES = ['The job', 'Tools and safety gear', 'Materials', 'Hands-on level and photos', 'Check and save'];
+function flowTop(){
+  var d = S.draft, step = d.step, bars = '';
+  for (var i = 1; i <= 5; i++) bars += '<span class="' + (i <= step ? 'on' : '') + '"></span>';
+  return '<header class="flowtop"><div class="gut flowtop-in"><div class="row-between">' +
+    (step > 1 ? '<button type="button" class="iconbtn" data-act="back" aria-label="Back to step ' + (step - 1) + '">' + I(IC.back, 2.2, 22) + '</button>' : '<span class="iconbtn-spacer"></span>') +
+    '<span class="fw6">' + (d.editId ? 'Edit entry' : 'Log work') + ' · ' + esc(fmtShort(d.date)) + '</span>' +
+    '<button type="button" class="iconbtn" data-act="cancelLog" aria-label="' + (d.editId ? 'Close without saving' : 'Close and finish later') + '">' + I(IC.x, 2.2, 22) + '</button></div>' +
+    '<div class="progress" aria-hidden="true">' + bars + '</div><p class="muted sm fw5">Step ' + step + ' of 5 · ' + STEP_TITLES[step - 1] + '</p></div></header>';
+}
+function flowBar(label, act, note){
+  return '<div class="bar"><div class="bar-in"><button type="button" class="btn btn-primary btn-lg btn-block" data-act="' + act + '">' + label + '</button>' +
+    (note ? '<p class="muted xs" style="text-align:center">' + note + '</p>' : '') + '</div></div>';
+}
+var ARROW = I('<path d="M5 12h14M13 6l6 6-6 6"/>', 2.4);
+
+function vStep1(){
+  var d = S.draft, t = tr(d.trade), m = modOf(d.trade, d.area), breaks = [0, 15, 30, 45, 60];
+  var tasks = m ? uniq(m.tasks.concat(d.tasks)) : [];
+  var out = '<main class="gut has-bar stack-lg">';
+  out += '<div class="stack-xs"><h1 class="h1">What did you work on?</h1><p class="muted">Pick the main area of your ' + esc(lowerFirst(t.name)) + ' work. Bhala matches it to your logbook code.</p></div>';
+  out += '<section class="stack-sm"><div class="grid3">' +
+    '<label class="field">Date<input type="date" id="f-date" data-field="date" value="' + esc(d.date) + '" max="' + todayISO() + '"></label>' +
+    '<label class="field">Start<input type="time" id="f-start" data-field="start" value="' + esc(d.start) + '"></label>' +
+    '<label class="field">Finish<input type="time" id="f-end" data-field="end" value="' + esc(d.end) + '"></label></div>' +
+    '<div class="grid-site"><label class="field">Company or site<input type="text" id="f-site" data-field="site" value="' + esc(d.site) + '" placeholder="e.g. Botha Engineering, George"></label>' +
+    '<label class="field">Break<select id="f-break" data-field="breakMin">' + breaks.map(function(v){ return '<option value="' + v + '"' + (Number(d.breakMin) === v ? ' selected' : '') + '>' + v + ' min</option>'; }).join('') + '</select></label></div>' +
+    '<p class="muted sm" id="hoursLbl">' + esc(hoursLabel(d)) + '</p></section>';
+  out += '<section class="stack-sm" role="radiogroup" aria-label="Work area">' + t.mods.map(function(mm){
+    var on = d.area === mm.id;
+    return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-act="pickArea" data-id="' + mm.id + '"><span class="dot"></span>' +
+      '<span class="opt-main"><span class="opt-title">' + esc(mm.name) + '</span><span class="opt-sub">' + esc(mm.hint) + '</span></span><span class="tag">' + mm.id + '</span></button>';
+  }).join('') + '</section>';
+  if (m){
+    out += '<section class="stack-sm"><h2 class="h3">What exactly? <span class="muted fw4 sm">Tap all that apply</span></h2>' +
+      '<div class="chips">' + tasks.map(function(x){ return chip(x, d.tasks.indexOf(x) >= 0, 'toggleTask'); }).join('') + '</div>' +
+      '<div class="addrow"><label class="sr-only" for="addTask">Add your own task</label><input type="text" id="addTask" placeholder="Add your own task" data-enter="addTask">' +
+      '<button type="button" class="btn btn-ghost" data-act="addTask">Add</button></div></section>';
+  }
+  out += errBox() + '</main>' + flowBar('Next: tools used ' + ARROW, 'next');
+  return out;
+}
+function vStep2(){
+  var d = S.draft, t = tr(d.trade), f = usage('tools', d.trade);
+  var names = uniq(t.tools.map(function(x){ return x[0]; }).concat(d.tools));
+  var order = {}; names.forEach(function(n, i){ order[n] = i; });
+  names.sort(function(a, b){ return (f[b] || 0) - (f[a] || 0) || order[a] - order[b]; });
+  var ppe = uniq(t.ppe.concat(d.ppe));
+  var out = '<main class="gut has-bar stack-lg">';
+  out += '<div class="stack-xs"><h1 class="h1">Which tools did you use?</h1><p class="muted">Tap to select. The tools you use most show first.</p></div>';
+  out += '<div class="toolgrid">' + names.map(function(n){
+    var on = d.tools.indexOf(n) >= 0, kind = toolKind(d.trade, n);
+    return '<button type="button" class="tool" aria-pressed="' + on + '" data-act="toggleTool" data-v="' + esc(n) + '">' +
+      (on ? '<span class="tick">' + I(IC.check, 3.4) + '</span>' : '') + '<span class="tic">' + I(KIND_ICON[kind] || IC.wrench, 2, 24) + '</span>' + esc(n) + '</button>';
+  }).join('') + '</div>';
+  out += '<div class="addrow"><label class="sr-only" for="addTool">Add another tool</label><input type="text" id="addTool" placeholder="Add another tool" data-enter="addTool">' +
+    '<button type="button" class="btn btn-ghost" data-act="addTool">Add</button></div>';
+  out += '<section class="stack-sm"><h2 class="h3">Safety gear worn</h2><div class="chips">' + ppe.map(function(p){ return chip(p, d.ppe.indexOf(p) >= 0, 'togglePpe'); }).join('') + '</div></section>';
+  out += '</main>' + flowBar('Next: materials used ' + ARROW, 'next');
+  return out;
+}
+function matPool(tid){
+  var mu = materialUsage(tid), pool = tr(tid).materials.map(function(c){ return {name:c[0], unit:c[1]}; });
+  Object.keys(mu.f).forEach(function(n){ if (!pool.some(function(p){ return p.name === n; })) pool.push({name:n, unit:mu.unit[n]}); });
+  return {pool:pool, mu:mu};
+}
+function matSuggestHtml(){
+  var d = S.draft, q = UI.matQuery.trim(), ql = q.toLowerCase();
+  if (!q) return '';
+  var have = {}, pool = matPool(d.trade).pool;
+  d.materials.forEach(function(m){ have[m.name.toLowerCase()] = 1; });
+  var hits = pool.filter(function(p){ return p.name.toLowerCase().indexOf(ql) >= 0 && !have[p.name.toLowerCase()]; }).slice(0, 6);
+  var exact = pool.some(function(p){ return p.name.toLowerCase() === ql; }) || have[ql];
+  var out = hits.length ? '<div class="chips">' + hits.map(function(h){
+    return '<button type="button" class="chip dashed" data-act="matAdd" data-name="' + esc(h.name) + '" data-unit="' + esc(h.unit) + '">' + I(IC.plus, 2.4) + esc(h.name) + '</button>';
+  }).join('') + '</div>' : '';
+  if (!exact){
+    out += '<div class="addrow" style="grid-template-columns:minmax(0,1fr) 100px auto"><span class="sm" style="align-self:center;overflow-wrap:anywhere">Add “' + esc(q) + '”</span>' +
+      '<label class="sr-only" for="matUnit">Unit</label><select id="matUnit">' + UNITS.map(function(u){ return '<option value="' + u + '">' + u + '</option>'; }).join('') + '</select>' +
+      '<button type="button" class="btn btn-ghost" data-act="matAddCustom">Add</button></div>';
+  }
+  return out;
+}
+function vStep3(){
+  var d = S.draft, mp = matPool(d.trade), mu = mp.mu;
+  var quick = Object.keys(mu.f).sort(function(a, b){ return mu.f[b] - mu.f[a]; }).map(function(n){ return {name:n, unit:mu.unit[n]}; });
+  mp.pool.forEach(function(c){ if (!quick.some(function(q){ return q.name === c.name; })) quick.push(c); });
+  quick = quick.filter(function(q){ return !d.materials.some(function(m){ return m.name === q.name; }); }).slice(0, 5);
+  var out = '<main class="gut has-bar stack-lg">';
+  out += '<div class="stack-xs"><h1 class="h1">What materials did you use?</h1><p class="muted">Rough amounts are fine. Skip this step if you used none.</p></div>';
+  out += '<section class="stack-sm"><div class="searchbox">' + I(IC.search) + '<label class="sr-only" for="matQuery">Search or add a material</label>' +
+    '<input type="search" id="matQuery" data-field="matQuery" placeholder="Search or add a material" value="' + esc(UI.matQuery) + '" autocomplete="off"></div>' +
+    '<div class="stack-sm" id="matSuggest">' + matSuggestHtml() + '</div></section>';
+  if (quick.length){
+    out += '<section class="stack-sm"><h2 class="sm fw6 muted">Quick add</h2><div class="chips">' + quick.map(function(q){
+      return '<button type="button" class="chip dashed" data-act="matAdd" data-name="' + esc(q.name) + '" data-unit="' + esc(q.unit) + '">' + I(IC.plus, 2.4) + esc(q.name) + '</button>';
+    }).join('') + '</div></section>';
+  }
+  if (d.materials.length){
+    out += '<ul class="mat-list">' + d.materials.map(function(m, i){
+      return '<li class="mat"><span class="mat-name">' + esc(m.name) + '</span><span class="stepper">' +
+        '<button type="button" data-act="matDec" data-i="' + i + '" aria-label="Less ' + esc(m.name) + '">' + I(IC.minus, 2.6, 16) + '</button>' +
+        '<label class="sr-only" for="qty' + i + '">Amount of ' + esc(m.name) + '</label><input type="number" id="qty' + i + '" inputmode="decimal" min="0" step="any" data-field="qty:' + i + '" value="' + esc(fmtQty(m.qty)) + '">' +
+        '<button type="button" class="plus" data-act="matInc" data-i="' + i + '" aria-label="More ' + esc(m.name) + '">' + I(IC.plus, 2.6, 16) + '</button></span>' +
+        '<span class="unit">' + esc(m.unit) + '</span>' +
+        '<button type="button" class="iconbtn" data-act="matRemove" data-i="' + i + '" aria-label="Remove ' + esc(m.name) + '">' + I(IC.x, 2.2, 18) + '</button></li>';
+    }).join('') + '</ul>';
+  } else {
+    out += '<div class="card empty"><p class="fw6">No materials yet</p><p class="muted sm">Search above or tap a quick add.</p></div>';
+  }
+  out += '</main>' + flowBar('Next: photos ' + ARROW, 'next');
+  return out;
+}
+function vStep4(){
+  var d = S.draft;
+  var out = '<main class="gut has-bar stack-lg">';
+  out += '<div class="stack-xs"><h1 class="h1">How hands-on were you?</h1><p class="muted">This sets the level on your logbook code.</p></div>';
+  out += '<section class="stack-sm" role="radiogroup" aria-label="Hands-on level">' + LEVELS.map(function(l){
+    var on = d.level === l.id;
+    return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-act="pickLevel" data-id="' + l.id + '"><span class="dot"></span>' +
+      '<span class="opt-main"><span class="opt-title">' + esc(l.title) + '</span><span class="opt-sub">' + esc(l.sub) + '</span></span><span class="tag">' + l.id + '</span></button>';
+  }).join('') + '</section>';
+  out += '<section class="stack-sm"><h2 class="h3">Photos of your work <span class="muted fw4 sm">· ' + d.photos.length + ' added</span></h2>' +
+    '<div class="grid2"><input type="file" id="photoCam" accept="image/*" capture="environment" class="sr-only" data-file="photo">' +
+    '<label class="btn btn-outline" for="photoCam">' + I(IC.camera) + 'Take photo</label>' +
+    '<input type="file" id="photoLib" accept="image/*" multiple class="sr-only" data-file="photo">' +
+    '<label class="btn btn-ghost" for="photoLib">' + I(IC.upload) + 'Upload</label></div>';
+  if (UI.photoBusy) out += '<p class="muted sm" role="status">Adding your photo…</p>';
+  if (d.photos.length){
+    out += '<div class="thumbs">' + d.photos.map(function(ph){
+      return '<figure class="thumb"><img data-photo="' + esc(ph.id) + '" alt="Work photo"><span class="miss">Photo not on this device</span>' +
+        '<button type="button" class="thumb-x" data-act="photoRemove" data-id="' + esc(ph.id) + '" aria-label="Remove photo">' + I(IC.x, 2.4, 18) + '</button></figure>';
+    }).join('') + '</div>';
+  } else {
+    out += '<p class="muted sm">Photos are your proof. Snap the work before it gets closed up or painted.</p>';
+  }
+  out += '</section>';
+  out += '<section class="stack-sm"><label class="h3" for="f-notes">Notes <span class="muted fw4 sm">(optional)</span></label>' +
+    '<textarea id="f-notes" data-field="notes" rows="3" placeholder="Anything your mentor or facilitator should know">' + esc(d.notes) + '</textarea></section>';
+  out += errBox() + '</main>' + flowBar('Next: check and save ' + ARROW, 'next');
+  return out;
+}
+function vStep5(){
+  var d = S.draft, t = tr(d.trade), m = modOf(d.trade, d.area), l = lvlOf(d.level), code = codeOf(d), key = d.trade + '|' + code;
+  var count = S.entries.filter(function(e){ return codeKey(e) === key && e.id !== d.editId; }).length + 1;
+  var pips = ''; for (var k = 0; k < 3; k++) pips += '<span class="pip' + (k < count ? ' on' : '') + '"></span>';
+  var mentor = S.profile.mentor || 'your mentor';
+  var wasSigned = d.editId && (S.entries.filter(function(e){ return e.id === d.editId; })[0] || {}).status === 'signed';
+  var out = '<main class="gut has-bar stack">';
+  out += '<div class="stack-xs"><h1 class="h1">Check and save</h1><p class="muted">Bhala matched this work to your logbook code.</p></div>';
+  out += '<section class="codecard"><span class="k">Matched code</span><span class="code">' + esc((t.qual ? t.qual + '-' : '') + code) + '</span>' +
+    '<span class="desc">' + esc(m.name + ', ' + lowerFirst(l.short)) + '</span>' + (t.verified ? '' : '<span class="draft">Draft code, confirm with your facilitator</span>') +
+    '<div class="row-between"><span class="pips">' + pips + '<span class="fw6 sm" style="margin-left:4px">' +
+    (count <= 3 ? 'This makes ' + count + ' of 3' : 'Code complete. This adds extra experience.') + '</span></span>' +
+    '<button type="button" class="linkbtn" style="color:var(--accent)" data-act="step" data-step="4">Change</button></div></section>';
+  function row(k2, v, step){ return '<div class="dl-row"><dt>' + k2 + '</dt><dd>' + v + '</dd><button type="button" class="linkbtn" data-act="step" data-step="' + step + '" aria-label="Edit ' + k2 + '">Edit</button></div>'; }
+  var mats = d.materials.filter(function(x){ return Number(x.qty) > 0; });
+  out += '<dl class="card dl">' +
+    row('Date', esc(fmtShort(d.date)) + ', ' + esc(d.start) + ' to ' + esc(d.end) + ' (' + fmtH(hoursOf(d)) + ' h)', 1) +
+    row('Tasks', esc(taskSentence(d.tasks)), 1) +
+    row('Tools', esc(d.tools.length ? d.tools.slice(0, 3).join(', ') + (d.tools.length > 3 ? ' +' + (d.tools.length - 3) : '') : 'None'), 2) +
+    row('Materials', esc(mats.length ? mats.slice(0, 3).map(matText).join(', ') + (mats.length > 3 ? ' +' + (mats.length - 3) : '') : 'None'), 3) +
+    row('Evidence', plural(d.photos.length, 'photo', 'photos') + (d.notes ? ', 1 note' : ''), 4) + '</dl>';
+  out += '<label class="check"><input type="checkbox" id="f-mentor" data-field="sendMentor"' + (d.sendMentor ? ' checked' : '') + '>' +
+    '<span class="stack-xs"><span class="fw6">Send to ' + esc(mentor) + ' for sign-off</span><span class="muted xs">' +
+    (wasSigned ? 'Changes to a signed entry need your mentor to sign again.' : 'Tick this once your mentor has signed this day.') + '</span></span></label>';
+  out += errBox() + '</main>' + flowBar(I(IC.check, 2.6) + (d.editId ? 'Save changes' : 'Save to logbook'), 'saveEntry', 'Saved on this device');
+  return out;
+}
+function vLog(){
+  var d = S.draft;
+  if (!d){ UI.view = 'today'; return vToday(); }
+  return flowTop() + [vStep1, vStep2, vStep3, vStep4, vStep5][d.step - 1]();
+}
+
+var VIEWS = {plan:vPlan, today:vToday, history:vHistory, entry:vEntry, codes:vCodes, logbook:vLogbook, me:vMe, setup:vSetup, log:vLog};
+
+/* ---------- render ---------- */
+var urlCache = {};
+function hydratePhotos(){
+  var imgs = $app.querySelectorAll('img[data-photo]');
+  Array.prototype.forEach.call(imgs, function(img){
+    var id = img.getAttribute('data-photo');
+    if (urlCache[id]){ img.src = urlCache[id]; return; }
+    Store.getPhoto(id).then(function(b){
+      if (b){ urlCache[id] = URL.createObjectURL(b); img.src = urlCache[id]; }
+      else { var f = img.closest('.thumb'); if (f) f.classList.add('missing'); }
+    });
+  });
+}
+function render(){
+  if (!UI.ready){
+    $app.innerHTML = '<header class="hero"><div class="gut hero-in"><span class="logo">' + logoMark() + 'Bhala</span>' +
+      '<div class="stack-xs"><h1 class="hero-title">Opening your logbook</h1><p class="hero-sub">One moment…</p></div></div></header>';
+    return;
+  }
+  var v = VIEWS[UI.view] || vToday;
+  $app.innerHTML = v();
+  hydratePhotos();
+}
+function top(){ try { window.scrollTo(0, 0); } catch (e){} }
+var toastTimer = null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.hidden = true; }, 2800);
+}
+function toggleIn(arr, v){ var i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); else arr.push(v); }
+function addMat(name, unit){
+  var d = S.draft; name = String(name || '').trim(); if (!name) return;
+  var ex = d.materials.filter(function(m){ return m.name.toLowerCase() === name.toLowerCase(); })[0];
+  if (ex) ex.qty = (Number(ex.qty) || 0) + 1; else d.materials.push({name:name, unit:unit || 'pcs', qty:1});
+  UI.matQuery = ''; persist(); render();
+  var inp = document.getElementById('qty' + (d.materials.length - 1)); if (inp && !ex) inp.focus();
+}
+function dropDraftPhotos(d){ (d.photos || []).forEach(function(p){ if (!S.entries.some(function(e){ return (e.photos || []).some(function(x){ return x.id === p.id; }); })) Store.delPhoto(p.id); }); }
+
+/* ---------- photos ---------- */
+function processImage(file){
+  return new Promise(function(res, rej){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      try {
+        var max = 1280, w = img.naturalWidth, h = img.naturalHeight, s = Math.min(1, max / Math.max(w, h));
+        w = Math.max(1, Math.round(w * s)); h = Math.max(1, Math.round(h * s));
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        c.toBlob(function(b){ URL.revokeObjectURL(url); if (b) res({blob:b, w:w, h:h}); else rej(new Error('encode')); }, 'image/jpeg', 0.78);
+      } catch (e){ URL.revokeObjectURL(url); rej(e); }
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('decode')); };
+    img.src = url;
+  });
+}
+function addPhotos(files){
+  var d = S.draft; if (!d || !files || !files.length) return;
+  var list = Array.prototype.slice.call(files, 0, 10), bad = 0;
+  UI.photoBusy = true; render();
+  var chain = Promise.resolve();
+  list.forEach(function(f){
+    chain = chain.then(function(){
+      return processImage(f).then(function(r){
+        var id = 'p' + uid();
+        return Store.putPhoto(id, r.blob).then(function(){ d.photos.push({id:id, w:r.w, h:r.h}); });
+      }).catch(function(){ bad++; });
+    });
+  });
+  chain.then(function(){
+    UI.photoBusy = false; persist(); render();
+    if (bad) toast(bad === 1 ? 'One file couldn’t be added. Use a JPG or PNG photo.' : bad + ' files couldn’t be added. Use JPG or PNG photos.');
+  });
+}
+
+/* ---------- backup and restore ---------- */
+function blobToDataURL(b){ return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; r.readAsDataURL(b); }); }
+function dataURLToBlob(u){
+  var parts = String(u).split(','), mime = ((parts[0] || '').match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+  var bin = atob(parts[1] || ''), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type:mime});
+}
+function cleanEntry(e){
+  if (!e || typeof e !== 'object' || typeof e.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) return null;
+  var tid = TRADES[e.trade] ? e.trade : 'electrician';
+  if (!modOf(tid, e.area) || !lvlOf(e.level)) return null;
+  function arr(a){ return Array.isArray(a) ? a.filter(function(x){ return typeof x === 'string'; }).map(function(x){ return x.slice(0, 120); }) : []; }
+  return {id:String(e.id || uid()), trade:tid, date:e.date, start:/^\d{2}:\d{2}$/.test(e.start) ? e.start : '07:30', end:/^\d{2}:\d{2}$/.test(e.end) ? e.end : '16:00',
+    breakMin:Number(e.breakMin) || 0, site:String(e.site || '').slice(0, 200), area:e.area, level:e.level, tasks:arr(e.tasks), tools:arr(e.tools), ppe:arr(e.ppe),
+    materials:Array.isArray(e.materials) ? e.materials.filter(function(m){ return m && typeof m.name === 'string'; }).map(function(m){ return {name:m.name.slice(0, 120), unit:String(m.unit || 'pcs').slice(0, 12), qty:Number(m.qty) || 0}; }) : [],
+    photos:Array.isArray(e.photos) ? e.photos.filter(function(p){ return p && typeof p.id === 'string'; }).map(function(p){ return {id:p.id, w:Number(p.w) || 4, h:Number(p.h) || 3}; }) : [],
+    notes:String(e.notes || '').slice(0, 2000), status:['signed', 'waiting', 'notsent'].indexOf(e.status) >= 0 ? e.status : 'notsent',
+    sample:!!e.sample, createdAt:Number(e.createdAt) || Date.now(), updatedAt:Number(e.updatedAt) || Date.now()};
+}
+function cleanProfile(pr){
+  pr = pr || {};
+  return {name:String(pr.name || '').slice(0, 120), studentNo:String(pr.studentNo || '').slice(0, 60), employer:String(pr.employer || '').slice(0, 160),
+    mentor:String(pr.mentor || '').slice(0, 120), college:String(pr.college || COLLEGE).slice(0, 160), trade:TRADES[pr.trade] ? pr.trade : 'electrician'};
+}
+function backup(){
+  (function(){
+    var out = {app:'Bhala', v:2, exportedAt:new Date().toISOString(), profile:S.profile, entries:S.entries, photos:{},
+      plan:{uid:S.plan.uid, trialStart:S.plan.trialStart, email:S.plan.email || ''}};
+    var chain = Promise.resolve();
+    S.entries.forEach(function(e){ (e.photos || []).forEach(function(p){
+      chain = chain.then(function(){ return Store.getPhoto(p.id).then(function(b){ if (b) return blobToDataURL(b).then(function(u){ out.photos[p.id] = u; }); }); });
+    }); });
+    chain.then(function(){
+      return saveFile('Bhala backup ' + todayISO() + '.json', new Blob([JSON.stringify(out)], {type:'application/json'}));
+    }).then(function(){ toast('Backup ready. Keep it somewhere safe, like Google Drive or email.'); }).catch(function(err){
+      toast(err && err.code === 'declined' ? 'Backup cancelled' : 'The backup couldn’t be saved here.');
+    });
+  })();
+}
+function readRestore(file){
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try {
+      var o = JSON.parse(r.result);
+      if (!o || o.app !== 'Bhala' || !Array.isArray(o.entries)) throw new Error('bad');
+      UI.pendingRestore = o; render();
+    } catch (e){ toast('That file isn’t a Bhala backup.'); }
+  };
+  r.onerror = function(){ toast('That file couldn’t be read.'); };
+  r.readAsText(file);
+}
+
+/* ---------- PDF logbook (pdf-lib, loaded from cdnjs below) ---------- */
+function waitPdfLib(){
+  var t0 = Date.now();
+  return new Promise(function(res, rej){
+    (function poll(){
+      if (window.PDFLib && window.PDFLib.PDFDocument) return res(window.PDFLib);
+      if (Date.now() - t0 > 20000) return rej(new Error('pdf-lib'));
+      setTimeout(poll, 200);
+    })();
+  });
+}
+function pdfSafe(s){
+  return String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+    .replace(/…/g, '...').replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+}
+function buildPdf(list, withPhotos, tid){
+  return waitPdfLib().then(function(L){
+    var PDFDocument = L.PDFDocument, rgb = L.rgb, SF = L.StandardFonts, T = tr(tid);
+    var W = 595.28, H = 841.89, M = 40;
+    var NAVY = rgb(14/255, 42/255, 71/255), ORANGE = rgb(242/255, 107/255, 29/255), INK = rgb(17/255, 24/255, 32/255),
+        MUTED = rgb(61/255, 74/255, 88/255), RULE = rgb(154/255, 165/255, 177/255), CHIP = rgb(232/255, 237/255, 243/255),
+        PALE = rgb(244/255, 246/255, 248/255), WHITE = rgb(1, 1, 1), BAND_SUB = rgb(200/255, 211/255, 223/255), OK = rgb(27/255, 107/255, 62/255);
+    var p = S.profile, doc, font, bold, page, y;
+    return PDFDocument.create().then(function(d){
+      doc = d; doc.setTitle('Bhala logbook - ' + pdfSafe(p.name || 'apprentice')); doc.setCreator('Bhala'); doc.setProducer('Bhala');
+      return Promise.all([doc.embedFont(SF.Helvetica), doc.embedFont(SF.HelveticaBold)]);
+    }).then(function(fonts){
+      font = fonts[0]; bold = fonts[1];
+      function text(t, x, ty, size, f, color){ page.drawText(pdfSafe(t), {x:x, y:H - ty, size:size, font:f || font, color:color || INK}); }
+      function textR(t, xr, ty, size, f, color){ var s = pdfSafe(t), ff = f || font; page.drawText(s, {x:xr - ff.widthOfTextAtSize(s, size), y:H - ty, size:size, font:ff, color:color || INK}); }
+      function wrap(t, f, size, maxW){
+        var words = pdfSafe(t).split(/\s+/).filter(Boolean), lines = [], line = '';
+        words.forEach(function(w){
+          var cand = line ? line + ' ' + w : w;
+          if (f.widthOfTextAtSize(cand, size) <= maxW){ line = cand; return; }
+          if (line) lines.push(line);
+          if (f.widthOfTextAtSize(w, size) > maxW){
+            var cur = '';
+            for (var i = 0; i < w.length; i++){ if (f.widthOfTextAtSize(cur + w[i], size) > maxW && cur){ lines.push(cur); cur = w[i]; } else cur += w[i]; }
+            line = cur;
+          } else line = w;
+        });
+        if (line) lines.push(line);
+        return lines.length ? lines : [''];
+      }
+      function band(){
+        page.drawRectangle({x:0, y:H - 58, width:W, height:58, color:NAVY});
+        page.drawSvgPath('M5 0H19A5 5 0 0 1 24 5V19A5 5 0 0 1 19 24H5A5 5 0 0 1 0 19V5A5 5 0 0 1 5 0Z', {x:M, y:H - 17, color:ORANGE});
+        page.drawSvgPath('M12 20h9', {x:M + 4.5, y:H - 21.5, scale:0.625, borderColor:NAVY, borderWidth:2.4});
+        page.drawSvgPath('M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z', {x:M + 4.5, y:H - 21.5, scale:0.625, borderColor:NAVY, borderWidth:2.4});
+        text('Bhala', M + 32, 34, 15, bold, WHITE);
+        textR(p.college || COLLEGE, W - M, 28, 10, bold, WHITE);
+        textR('Workplace logbook · ' + T.name, W - M, 41, 8.5, font, BAND_SUB);
+      }
+      function newPage(){ page = doc.addPage([W, H]); band(); y = 84; }
+      function table(cols, head, rows, foot, opts){
+        opts = opts || {};
+        var size = opts.size || 8.5, lh = size * 1.3, padX = 4, padY = 4, bottom = H - 50;
+        function measure(cells, f, cs){ cs = cs || cols; return cells.map(function(c, i){ return wrap(c, f, size, cs[i].w - padX * 2); }); }
+        function rowH(lines){ var n = 1; lines.forEach(function(l){ n = Math.max(n, l.length); }); return n * lh + padY * 2; }
+        function drawRow(cells, f, fill, color, cs){
+          cs = cs || cols;
+          var lines = measure(cells, f, cs), h = rowH(lines), x = M;
+          cs.forEach(function(c, i){
+            page.drawRectangle({x:x, y:H - y - h, width:c.w, height:h, color:fill, borderColor:RULE, borderWidth:0.5});
+            lines[i].forEach(function(ln, k){
+              var ty = y + padY + size + k * lh - 1.5;
+              var cc = (opts.cellColor && opts.cellColor(cells, i)) || color || INK;
+              if (c.align === 'right') textR(ln, x + c.w - padX, ty, size, f, cc);
+              else if (c.align === 'center') page.drawText(ln, {x:x + (c.w - f.widthOfTextAtSize(ln, size)) / 2, y:H - ty, size:size, font:f, color:cc});
+              else page.drawText(ln, {x:x + padX, y:H - ty, size:size, font:(c.bold && f === font) ? bold : f, color:cc});
+            });
+            x += c.w;
+          });
+          y += h;
+        }
+        function headRow(){ drawRow(head, bold, CHIP); }
+        headRow();
+        rows.forEach(function(r){
+          var h = rowH(measure(r, font));
+          if (y + h > bottom){ newPage(); headRow(); }
+          drawRow(r, font, WHITE);
+        });
+        if (foot){
+          var span = opts.footSpan || 1, fw = 0;
+          for (var s = 0; s < span; s++) fw += cols[s].w;
+          var fcols = [{w:fw}].concat(cols.slice(span));
+          var fh = rowH(measure(foot, bold, fcols));
+          if (y + fh > bottom){ newPage(); headRow(); }
+          drawRow(foot, bold, PALE, null, fcols);
+        }
+      }
+      function signatures(){
+        if (y + 70 > H - 50){ newPage(); y += 20; }
+        var sy = y + 44, cw = (W - 2 * M - 48) / 3;
+        ['Apprentice', 'Mentor', 'Facilitator'].forEach(function(lab, i){
+          var x = M + i * (cw + 24);
+          page.drawLine({start:{x:x, y:H - sy}, end:{x:x + cw, y:H - sy}, thickness:0.8, color:INK});
+          text(lab, x, sy + 13, 9.5, bold);
+          text('Date: ______________', x, sy + 26, 8.5, font, MUTED);
+        });
+        y = sy + 34;
+      }
+
+      /* page 1: summary */
+      var first = list[0].date, last = list[list.length - 1].date, st = statsOf(list, tid);
+      newPage();
+      text('Statement of work experience', M, 100, 20, bold);
+      text(qualLabel(tid) + ' · ' + rangeLabel(first, last), M, 118, 10, font, MUTED);
+      var fields = [['Apprentice', p.name], ['Student number', p.studentNo], ['Host employer', p.employer], ['Mentor (qualified artisan)', p.mentor], ['Training provider', p.college || COLLEGE], ['Trade', T.name]];
+      var colW = (W - 2 * M - 24) / 2;
+      fields.forEach(function(f, i){
+        var x = M + (i % 2) * (colW + 24), fy = 146 + Math.floor(i / 2) * 40;
+        text(f[0], x, fy, 8, font, MUTED);
+        text(wrap(f[1] || '-', bold, 11, colW)[0], x, fy + 15, 11, bold);
+        page.drawLine({start:{x:x, y:H - fy - 21}, end:{x:x + colW, y:H - fy - 21}, thickness:0.6, color:RULE});
+      });
+      y = 146 + 3 * 40 + 8;
+      text(plural(st.days, 'day', 'days') + ' logged · ' + fmtH(st.hrs) + ' hours · ' + plural(st.photos, 'photo', 'photos') + ' · ' + st.done + ' of ' + st.total + ' codes with 3 or more entries', M, y, 10);
+      if (!T.verified){ y += 14; text('Codes for this trade are a draft list. The training provider confirms the final codes.', M, y, 9, font, MUTED); }
+      y += 14;
+      text('Code progress', M, y + 14, 12, bold); y += 24;
+      var rows15 = [];
+      T.mods.forEach(function(m){ LEVELS.forEach(function(l){ var c = codeStat(st, tid, m.id + '-' + l.id); rows15.push([m.id + '-' + l.id, m.name, l.short, String(c.n), String(c.signed)]); }); });
+      var cw15 = W - 2 * M;
+      table([{w:78, bold:true}, {w:cw15 - 78 - 140 - 96}, {w:140}, {w:48, align:'right'}, {w:48, align:'right'}],
+        ['Code', 'Work experience module', 'Level', 'Entries', 'Signed'], rows15, null,
+        {cellColor:function(cells, i){ return (i === 3 && Number(cells[3]) >= 3) ? OK : null; }});
+
+      /* one page per week */
+      weeksOf(list).forEach(function(wk){
+        newPage();
+        text(weekLabel(wk.es), M, 100, 15, bold);
+        text((p.name || 'Apprentice') + (p.studentNo ? ' · ' + p.studentNo : '') + ' · ' + T.name + ' · Host employer: ' + (p.employer || '-'), M, 116, 9, font, MUTED);
+        y = 128;
+        var tot = wk.es.reduce(function(a, e){ return a + hoursOf(e); }, 0), cwW = W - 2 * M;
+        table([{w:54}, {w:cwW - 54 - 96 - 78 - 32 - 48}, {w:96}, {w:78, bold:true}, {w:32, align:'right'}, {w:48, align:'center'}],
+          ['Date', 'Work done and materials', 'Tools', 'Code', 'Hrs', 'Mentor'],
+          wk.es.map(function(e){ return [fmtShort(e.date), workText(e) + (e.site && e.site !== p.employer ? ' Site: ' + e.site + '.' : ''), (e.tools || []).join(', ') || '-', codeOf(e), fmtH(hoursOf(e)), e.status === 'signed' ? 'Signed' : '']; }),
+          ['Total hours this week', fmtH(tot), ''], {footSpan:4});
+        signatures();
+      });
+
+      /* photo pages */
+      var items = [];
+      if (withPhotos) list.forEach(function(e){ (e.photos || []).forEach(function(ph){ items.push({e:e, ph:ph}); }); });
+      var chain = Promise.resolve();
+      if (items.length){
+        var cols = 3, gap = 12, cw = (W - 2 * M - gap * (cols - 1)) / cols, ch = cw * 0.75, capH = 26, col = 0;
+        chain = chain.then(function(){ newPage(); text('Photo evidence', M, 100, 15, bold); text(plural(items.length, 'photo', 'photos') + ' from these logbook entries', M, 116, 9, font, MUTED); y = 132; });
+        items.forEach(function(it){
+          chain = chain.then(function(){ return Store.getPhoto(it.ph.id); }).then(function(b){
+            if (!b) return null;
+            return b.arrayBuffer().then(function(buf){
+              var u = new Uint8Array(buf);
+              if (u[0] === 0xFF && u[1] === 0xD8) return doc.embedJpg(u);
+              if (u[0] === 0x89 && u[1] === 0x50) return doc.embedPng(u);
+              return null;
+            }).catch(function(){ return null; });
+          }).then(function(img){
+            if (y + ch + capH > H - 50){ newPage(); y = 92; col = 0; }
+            var x = M + col * (cw + gap);
+            page.drawRectangle({x:x, y:H - y - ch, width:cw, height:ch, color:PALE});
+            if (img){
+              var r = Math.min(cw / img.width, ch / img.height), iw = img.width * r, ih = img.height * r;
+              page.drawImage(img, {x:x + (cw - iw) / 2, y:H - y - ch + (ch - ih) / 2, width:iw, height:ih});
+            } else {
+              var msg = 'Photo not on this device';
+              page.drawText(msg, {x:x + (cw - font.widthOfTextAtSize(msg, 8)) / 2, y:H - y - ch / 2, size:8, font:font, color:MUTED});
+            }
+            text(fmtShort(it.e.date) + ' · ' + codeOf(it.e), x, y + ch + 11, 8, bold);
+            text(wrap(titleOf(it.e), font, 8, cw)[0], x, y + ch + 21, 8, font, MUTED);
+            col++; if (col === cols){ col = 0; y += ch + capH + 12; }
+          });
+        });
+      }
+      return chain.then(function(){
+        var pages = doc.getPages(), n = pages.length, gen = 'Generated by Bhala on ' + fmtDay(todayISO());
+        pages.forEach(function(pg, i){
+          pg.drawText(pdfSafe(gen), {x:M, y:24, size:8, font:font, color:MUTED});
+          var s = 'Page ' + (i + 1) + ' of ' + n;
+          pg.drawText(s, {x:W - M - font.widthOfTextAtSize(s, 8), y:24, size:8, font:font, color:MUTED});
+        });
+        return doc.save();
+      });
+    });
+  });
+}
+function exportPdf(){
+  var list = rangeEntries(), tid = curTid();
+  if (!list.length){ UI.exp.msg = 'No entries in these dates.'; render(); return; }
+  UI.exp.busy = true; UI.exp.msg = ''; render();
+  var name = 'Bhala ' + tr(tid).name + ' logbook ' + (String(S.profile.name || 'apprentice').replace(/[^\w\- ]+/g, '').trim() || 'apprentice') + ' ' + list[0].date + ' to ' + list[list.length - 1].date + '.pdf';
+  buildPdf(list, UI.exp.photos, tid).then(function(bytes){
+    return saveFile(name, new Blob([bytes], {type:'application/pdf'})).then(function(){ UI.exp.msg = 'Your PDF is ready. Find it in your Downloads.'; })
+      .catch(function(err){
+        var c = err && err.code;
+        UI.exp.msg = c === 'declined' ? 'Download cancelled.' : c === 'rate_limited' ? 'A download is already waiting for you. Finish that one first.' : 'The PDF couldn’t be saved here.';
+      });
+  }).catch(function(err){
+    UI.exp.msg = (err && err.message === 'pdf-lib') ? 'The PDF maker didn’t load. Check your internet connection and try again.' : 'Something went wrong making the PDF. Try again.';
+    if (window.console) console.error(err);
+  }).then(function(){ UI.exp.busy = false; if (UI.view === 'logbook') render(); });
+}
+
+/* ---------- actions ---------- */
+function go(view){ UI.view = view; UI.err = ''; UI.confirmDel = false; UI.copyText = ''; if (view === 'logbook') initExport(); render(); top(); }
+function beginLog(from, date){ S.draft = newDraft(from, date); UI.err = ''; UI.matQuery = ''; UI.view = 'log'; persist(); render(); top(); }
+var A = {
+  go:function(ds){ go(ds.view); },
+  startLog:function(ds){
+    if (gate()) return;
+    var tid = curTid(), srcs = sorted().filter(function(e){ return tidOf(e) === tid; });
+    if (S.draft && !S.draft.editId) dropDraftPhotos(S.draft);
+    beginLog(ds.copy === '1' ? srcs[0] : null);
+  },
+  dayTap:function(ds){
+    var hits = sorted().filter(function(e){ return e.date === ds.date; });
+    if (hits.length){ A.openEntry({id:hits[0].id}); return; }
+    if (ds.date > todayISO()) return;
+    if (gate()) return;
+    if (S.draft && !S.draft.editId) dropDraftPhotos(S.draft);
+    beginLog(null, ds.date);
+  },
+  continueLog:function(){ UI.view = 'log'; UI.err = ''; render(); top(); },
+  discardDraft:function(){ if (S.draft) dropDraftPhotos(S.draft); S.draft = null; persist(); render(); toast('Unfinished log removed'); },
+  back:function(){ var d = S.draft; if (d.step > 1){ d.step--; UI.err = ''; persist(); render(); top(); } else A.cancelLog(); },
+  cancelLog:function(){
+    var d = S.draft;
+    if (d && d.editId){ var id = d.editId; var orig = S.entries.filter(function(e){ return e.id === id; })[0];
+      (d.photos || []).forEach(function(p){ if (!orig || !(orig.photos || []).some(function(x){ return x.id === p.id; })) Store.delPhoto(p.id); });
+      S.draft = null; persist(); UI.view = 'entry'; UI.entryId = id; render(); top(); return; }
+    UI.view = 'today'; UI.err = ''; persist(); render(); top(); toast('Saved for later. Finish it from the Today screen.');
+  },
+  next:function(){
+    var d = S.draft, err = validate(d.step);
+    if (err){ UI.err = err; render(); var el = $app.querySelector('.err'); if (el && el.scrollIntoView) el.scrollIntoView({block:'center'}); return; }
+    UI.err = ''; if (d.step < 5){ d.step++; persist(); render(); top(); }
+  },
+  step:function(ds){ S.draft.step = Number(ds.step); UI.err = ''; persist(); render(); top(); },
+  pickArea:function(ds){ var d = S.draft; if (d.area !== ds.id){ d.area = ds.id; d.tasks = []; } UI.err = ''; persist(); render(); },
+  toggleTask:function(ds){ toggleIn(S.draft.tasks, ds.v); UI.err = ''; persist(); render(); },
+  addTask:function(){ var i = document.getElementById('addTask'), v = (i && i.value || '').trim().slice(0, 80); if (!v) return; if (S.draft.tasks.indexOf(v) < 0) S.draft.tasks.push(v); UI.err = ''; persist(); render(); },
+  toggleTool:function(ds){ toggleIn(S.draft.tools, ds.v); persist(); render(); },
+  addTool:function(){ var i = document.getElementById('addTool'), v = (i && i.value || '').trim().slice(0, 60); if (!v) return; if (S.draft.tools.indexOf(v) < 0) S.draft.tools.push(v); persist(); render(); },
+  togglePpe:function(ds){ toggleIn(S.draft.ppe, ds.v); persist(); render(); },
+  matAdd:function(ds){ addMat(ds.name, ds.unit); },
+  matAddCustom:function(){ var u = document.getElementById('matUnit'); addMat(UI.matQuery.slice(0, 80), u ? u.value : 'pcs'); },
+  matInc:function(ds){ var m = S.draft.materials[Number(ds.i)]; m.qty = Math.round(((Number(m.qty) || 0) + 1) * 100) / 100; persist(); render(); },
+  matDec:function(ds){ var m = S.draft.materials[Number(ds.i)]; m.qty = Math.max(0, Math.round(((Number(m.qty) || 0) - 1) * 100) / 100); persist(); render(); },
+  matRemove:function(ds){ S.draft.materials.splice(Number(ds.i), 1); persist(); render(); },
+  pickLevel:function(ds){ S.draft.level = ds.id; UI.err = ''; persist(); render(); },
+  photoRemove:function(ds){
+    var d = S.draft; d.photos = d.photos.filter(function(p){ return p.id !== ds.id; });
+    if (!isPhotoUsed(ds.id)) Store.delPhoto(ds.id);
+    persist(); render();
+  },
+  saveEntry:function(){
+    var d = S.draft, err = validate(1) || validate(4);
+    if (err){ UI.err = err; render(); return; }
+    var now = Date.now(), id;
+    var base = {trade:d.trade, date:d.date, start:d.start, end:d.end, breakMin:Number(d.breakMin) || 0, site:String(d.site || '').trim(), area:d.area, level:d.level,
+      tasks:d.tasks.slice(), tools:d.tools.slice(), ppe:d.ppe.slice(),
+      materials:d.materials.filter(function(m){ return Number(m.qty) > 0; }).map(function(m){ return {name:m.name, unit:m.unit, qty:Number(m.qty)}; }),
+      photos:d.photos.map(function(p){ return {id:p.id, w:p.w, h:p.h}; }), notes:String(d.notes || '').trim(), status:d.sendMentor ? 'waiting' : 'notsent', updatedAt:now};
+    if (d.editId){
+      var idx = -1; S.entries.forEach(function(e, i){ if (e.id === d.editId) idx = i; });
+      if (idx < 0){ id = uid(); S.entries.push(Object.assign({id:id, createdAt:now, sample:false}, base)); }
+      else {
+        var old = S.entries[idx], keep = {}; base.photos.forEach(function(p){ keep[p.id] = 1; });
+        (old.photos || []).forEach(function(p){ if (!keep[p.id]) Store.delPhoto(p.id); });
+        S.entries[idx] = Object.assign({}, old, base); id = old.id;
+      }
+    } else { id = uid(); S.entries.push(Object.assign({id:id, createdAt:now, sample:false}, base)); }
+    var wasEdit = !!d.editId;
+    S.draft = null; UI.err = ''; persist();
+    UI.view = 'entry'; UI.entryId = id; UI.backTo = wasEdit ? (UI.backTo || 'history') : 'today'; UI.confirmDel = false; UI.copyText = ''; render(); top();
+    toast(wasEdit ? 'Changes saved' : 'Saved to your logbook');
+  },
+  openEntry:function(ds){ if (UI.view !== 'entry') UI.backTo = UI.view; UI.view = 'entry'; UI.entryId = ds.id; UI.confirmDel = false; UI.copyText = ''; render(); top(); },
+  editEntry:function(){
+    var e = getEntry(); if (!e) return;
+    if (S.draft && !S.draft.editId) dropDraftPhotos(S.draft);
+    var d = clone(e);
+    S.draft = {editId:e.id, trade:tidOf(e), step:5, date:d.date, start:d.start, end:d.end, breakMin:d.breakMin, site:d.site, area:d.area, tasks:d.tasks, tools:d.tools, ppe:d.ppe,
+      materials:d.materials, level:d.level, photos:d.photos, notes:d.notes, sendMentor:true};
+    UI.view = 'log'; UI.err = ''; UI.matQuery = ''; persist(); render(); top();
+  },
+  toggleSigned:function(){ var e = getEntry(); if (!e) return; e.status = e.status === 'signed' ? 'waiting' : 'signed'; e.updatedAt = Date.now(); persist(); render(); toast(e.status === 'signed' ? 'Marked as signed' : 'Back to waiting for sign-off'); },
+  copySummary:function(){
+    var e = getEntry(); if (!e) return;
+    var txt = summaryText(e);
+    function fallback(){ UI.copyText = txt; render(); var b = document.getElementById('copyBox'); if (b){ b.focus(); b.select(); } }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ toast('Copied. Paste it into WhatsApp for your mentor.'); }, fallback);
+      } else fallback();
+    } catch (err){ fallback(); }
+  },
+  askDelete:function(){ UI.confirmDel = true; render(); },
+  cancelDelete:function(){ UI.confirmDel = false; render(); },
+  confirmDelete:function(){
+    var e = getEntry(); if (!e) return;
+    S.entries = S.entries.filter(function(x){ return x.id !== e.id; });
+    (e.photos || []).forEach(function(p){ if (!isPhotoUsed(p.id)) Store.delPhoto(p.id); });
+    UI.confirmDel = false; persist(); go(UI.backTo === 'today' ? 'today' : 'history'); toast('Entry deleted');
+  },
+  histFilter:function(ds){ UI.histFilter = ds.f; render(); },
+  clearCode:function(){ UI.histCode = null; render(); },
+  codeTile:function(ds){ UI.histCode = ds.code; UI.histFilter = 'all'; UI.histQuery = ''; go('history'); },
+  exportPdf:function(){ if (gate()) return; exportPdf(); },
+  checkPay:function(){ waitForPayment(1); },
+  reminder:function(){
+    saveFile('Bhala daily reminder.ics', new Blob([reminderIcs(UI.remindAt)], {type:'text/calendar'}))
+      .then(function(){ toast('Open the file to add the reminder to your calendar'); }, function(){ toast('The reminder couldn’t be saved here.'); });
+  },
+  backup:function(){ backup(); },
+  removeSamples:function(){ removeSamples(); persist(); render(); toast('Sample entries removed'); },
+  startOwn:function(){ UI.setupTrade = curTid(); go('setup'); },
+  pickTrade:function(ds){ UI.setupTrade = ds.id; var keep = {}; ['name','studentNo','employer','mentor','college'].forEach(function(k){ var el = document.getElementById('s-' + k); if (el) keep[k] = el.value; }); render();
+    Object.keys(keep).forEach(function(k){ var el = document.getElementById('s-' + k); if (el) el.value = keep[k]; }); },
+  applyRestore:function(){
+    var o = UI.pendingRestore; if (!o) return;
+    var chain = Promise.resolve();
+    Object.keys(o.photos || {}).forEach(function(id){
+      chain = chain.then(function(){ try { return Store.putPhoto(String(id), dataURLToBlob(o.photos[id])); } catch (e){ return null; } });
+    });
+    chain.then(function(){
+      S.profile = cleanProfile(o.profile);
+      if (o.plan) { S.plan = cleanPlan(o.plan); checkPro().catch(function(){}); }
+      S.entries = o.entries.map(cleanEntry).filter(Boolean); S.draft = null; UI.pendingRestore = null; persist(); render();
+      toast('Restored ' + plural(S.entries.length, 'entry', 'entries'));
+    });
+  },
+  cancelRestore:function(){ UI.pendingRestore = null; render(); }
+};
+
+/* ---------- events ---------- */
+$app.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]');
+  if (!el || !$app.contains(el) || el.disabled) return;
+  var fn = A[el.getAttribute('data-act')];
+  if (fn){ e.preventDefault(); fn(el.dataset, el); }
+});
+$app.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter') return;
+  var t = e.target, act = t && t.getAttribute && t.getAttribute('data-enter');
+  if (act && A[act]){ e.preventDefault(); A[act](t.dataset, t); }
+  else if (t && t.id === 'matQuery'){ e.preventDefault(); var first = $app.querySelector('#matSuggest [data-act]'); if (first) first.click(); }
+});
+function readForm(f){ var out = {}; ['name', 'studentNo', 'employer', 'mentor', 'college'].forEach(function(k){ var el = f.elements[k]; out[k] = el ? String(el.value).trim().slice(0, 160) : ''; }); if (!out.college) out.college = COLLEGE; return out; }
+$app.addEventListener('submit', function(e){
+  e.preventDefault();
+  var f = e.target;
+  if (f.id === 'profileForm'){
+    var p = readForm(f), sel = f.elements.trade ? f.elements.trade.value : curTid();
+    p.trade = TRADES[sel] ? sel : curTid();
+    var changed = p.trade !== S.profile.trade;
+    S.profile = p; persist(); render(); toast(changed ? 'Details saved. Your trade is now ' + tr(p.trade).name + '.' : 'Details saved');
+  }
+  if (f.id === 'subForm'){
+    var em = String(f.elements.email.value || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ UI.err = 'Add a valid email address. PayFast sends your receipt there.'; render(); var ee = document.getElementById('subEmail'); if (ee) ee.focus(); return; }
+    if (!onLiveSite()){ UI.err = 'Subscriptions work on the live Bhala website.'; render(); return; }
+    S.plan.email = em; persist();
+    location.href = CFG.api + '/subscribe?uid=' + encodeURIComponent(S.plan.uid) + '&email=' + encodeURIComponent(em) + '&name=' + encodeURIComponent((S.profile.name || '').split(/\s+/)[0] || '');
+    return;
+  }
+  if (f.id === 'setupForm'){
+    var np = readForm(f);
+    np.trade = UI.setupTrade && TRADES[UI.setupTrade] ? UI.setupTrade : curTid();
+    if (!np.name){ UI.err = 'Add your name. It goes on every logbook page.'; render(); var n = document.getElementById('s-name'); if (n) n.focus(); return; }
+    var fresh = !S.entries.some(function(e){ return !e.sample; });
+    removeSamples(); if (S.draft){ dropDraftPhotos(S.draft); S.draft = null; }
+    if (fresh && !isPro()) S.plan.trialStart = Date.now();
+    S.profile = np; UI.err = ''; persist(); go('today'); toast('Your logbook is ready. Log your first day.');
+  }
+});
+function onField(f, t, type){
+  var d = S.draft;
+  if (d && (f === 'date' || f === 'start' || f === 'end' || f === 'site' || f === 'breakMin' || f === 'notes')){
+    d[f] = f === 'breakMin' ? Number(t.value) : t.value;
+    if (f !== 'site' && f !== 'notes'){ var l = document.getElementById('hoursLbl'); if (l) l.textContent = hoursLabel(d); }
+    persist(); return;
+  }
+  if (d && f === 'sendMentor'){ d.sendMentor = t.checked; persist(); return; }
+  if (d && f.indexOf('qty:') === 0){ var m = d.materials[Number(f.slice(4))]; if (m){ var v = parseFloat(t.value); m.qty = isFinite(v) && v >= 0 ? v : 0; persist(); } return; }
+  if (f === 'matQuery'){ UI.matQuery = t.value; var box = document.getElementById('matSuggest'); if (box) box.innerHTML = matSuggestHtml(); return; }
+  if (f === 'histQuery'){ UI.histQuery = t.value; var hl = document.getElementById('histList'); if (hl) hl.innerHTML = histListHtml(); return; }
+  if (f === 'expFrom' || f === 'expTo'){ UI.exp[f === 'expFrom' ? 'from' : 'to'] = t.value; var pv = document.getElementById('lbPreview'); if (pv) pv.innerHTML = lbPreviewHtml(); return; }
+  if (f === 'expPhotos'){ UI.exp.photos = t.checked; return; }
+  if (f === 'remindAt'){ UI.remindAt = t.value; return; }
+  if (f === 'sampleTrade' && type === 'change' && TRADES[t.value]){
+    if (S.draft && !S.draft.editId && S.draft.trade !== t.value){ dropDraftPhotos(S.draft); S.draft = null; }
+    removeSamples(); S.entries = S.entries.concat(makeSamples(t.value)); S.profile.trade = t.value; UI.histCode = null;
+    persist(); render(); toast('Showing the ' + lowerFirst(tr(t.value).name) + ' sample');
+  }
+}
+$app.addEventListener('input', function(e){ var t = e.target, f = t.getAttribute && t.getAttribute('data-field'); if (f && f !== 'sampleTrade') onField(f, t, 'input'); });
+$app.addEventListener('change', function(e){
+  var t = e.target, kind = t.getAttribute && t.getAttribute('data-file');
+  if (kind === 'photo'){ addPhotos(t.files); t.value = ''; return; }
+  if (kind === 'restore'){ readRestore(t.files && t.files[0]); t.value = ''; return; }
+  var f = t.getAttribute && t.getAttribute('data-field');
+  if (f && (t.type === 'checkbox' || t.tagName === 'SELECT' || t.type === 'date' || t.type === 'time' || t.type === 'number')) onField(f, t, 'change');
+});
+
+/* ---------- boot ---------- */
+render();
+Store.init().then(function(){ return Store.loadState(); }).then(function(saved){
+  if (saved && (saved.v === 1 || saved.v === 2) && Array.isArray(saved.entries)){
+    S = {v:2, profile:cleanProfile(saved.profile), entries:saved.entries.map(cleanEntry).filter(Boolean), draft:saved.draft || null, plan:cleanPlan(saved.plan)};
+    if (S.draft){
+      if (!Array.isArray(S.draft.photos) || !Array.isArray(S.draft.tasks)) S.draft = null;
+      else if (!TRADES[S.draft.trade]) S.draft.trade = 'electrician';
+    }
+    if (saved.v === 1) persist();
+  } else {
+    S = {v:2, profile:sampleProfile('electrician'), entries:makeSamples('electrician'), draft:null, plan:newPlan()};
+    persist();
+  }
+  UI.ready = true;
+  var paid = null;
+  try { paid = new URLSearchParams(location.search).get('paid'); } catch (e){}
+  if (paid !== null){ try { history.replaceState(null, '', location.pathname); } catch (e){} }
+  if (paid === '1'){ UI.view = 'plan'; render(); waitForPayment(10); return; }
+  render();
+  if (paid === '0') toast('Payment cancelled. Nothing was charged.');
+  var stale = !S.plan.pro || Date.now() - (S.plan.pro.checkedAt || 0) > 2 * DAY;
+  if (stale && (S.plan.pro || S.plan.email)) checkPro().then(function(){ render(); }).catch(function(){});
+});
+})();
+</script>
+<script src="pdf-lib.min.js" defer></script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });</script>
+</body>
+</html>
+

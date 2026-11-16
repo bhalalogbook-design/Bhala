@@ -1,0 +1,9 @@
+{
+  "name": "bhala",
+  "private": true,
+  "type": "module",
+  "description": "Bhala apprentice logbook: web app, PayFast subscriptions on Netlify",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
