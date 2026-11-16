@@ -18,7 +18,7 @@
         e.preventDefault();
         var msg = f.querySelector('.form-msg');
         if (!msg) { msg = document.createElement('p'); msg.className = 'form-msg'; msg.setAttribute('role', 'status'); f.appendChild(msg); }
-        msg.textContent = 'This is a preview. On bhala.netlify.app this form sends to your Netlify inbox and email.';
+        msg.textContent = 'This is a preview. On bhala-logbook.netlify.app this form sends to your Netlify inbox and email.';
       });
     });
   }

@@ -43,7 +43,7 @@ Do this on a laptop or desktop, not a phone.
 
 1. In Netlify: **Add new site → Import an existing project → GitHub**, then pick `bhala`.
 2. Leave the build settings as they are (netlify.toml fills them in). Click **Deploy**.
-3. You get a link like `https://bhala-xyz.netlify.app`. In **Domain management** you can rename it, for example to `bhala.netlify.app` if that name is free, or add your own domain.
+3. You get a link like `https://bhala-xyz.netlify.app`. In **Domain management** you can rename it, for example to `bhala-logbook.netlify.app` if that name is free, or add your own domain.
 
 ## Step 3: add your settings
 

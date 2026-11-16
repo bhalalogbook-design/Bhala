@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /admin/
 Disallow: /thank-you.html
 
-Sitemap: https://bhala.netlify.app/sitemap.xml
+Sitemap: https://bhala-logbook.netlify.app/sitemap.xml
