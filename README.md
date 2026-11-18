@@ -111,6 +111,7 @@ On the Me screen they can tap **Add reminder** to get a daily reminder in their 
 
 ## Good to know
 
+- New days can be logged for today and up to 7 days back (change `backDays` in `var CFG` in `public/app/index.html`). This keeps apprentices logging, and paying, all through their training instead of filling in months at once. Old entries can always be edited.
 - The free trial starts when an apprentice starts their own logbook. Clearing the app's data resets the trial, but it also deletes their logbook, so few will do it.
 - The app checks the paid state when it opens (every 2 days at most). It keeps working offline until the paid-up date.
 - `public/app/pdf-lib.min.js` is the open-source PDF maker (MIT licence, see `pdf-lib-LICENSE.md`).

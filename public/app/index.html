@@ -394,7 +394,7 @@ var TRADE_ORDER = ['electrician','plumber','welder','boilermaker','carpenter','m
 
 var COLLEGE = 'Africa Skills George Tech';
 /* Price and trial length shown in the app. The real charge is set by PRICE in Netlify. */
-var CFG = {price:29, trialDays:30, api:'/api'};
+var CFG = {price:29, trialDays:30, backDays:7, api:'/api'};
 var LEVELS = [
   {id:'WE01', title:'I watched and helped', sub:'Observe and assist a qualified artisan', short:'Observe and assist'},
   {id:'WE02', title:'I did it, mentor watched closely', sub:'Under direct supervision', short:'Under direct supervision'},
@@ -652,6 +652,8 @@ function makeSamples(tid){
   });
 }
 function hasSamples(){ return S.entries.some(function(e){ return e.sample; }); }
+function earliestLogDate(){ var d = new Date(); d.setDate(d.getDate() - CFG.backDays); return isoDate(d); }
+var BACK_MSG = 'You can log today and up to ' + CFG.backDays + ' days back. Log each day as it happens so your logbook stays complete.';
 var DAY = 86400000;
 function isPro(){ return !!(S.plan.pro && S.plan.pro.until > Date.now()); }
 function trialLeft(){ return Math.max(0, Math.ceil((S.plan.trialStart + CFG.trialDays * DAY - Date.now()) / DAY)); }
@@ -735,6 +737,7 @@ function validate(step){
   if (step === 1){
     if (!d.date) return 'Pick the date you did this work.';
     if (d.date > todayISO()) return 'You can’t log a day that hasn’t happened yet.';
+    if (!d.editId && !hasSamples() && d.date < earliestLogDate()) return BACK_MSG;
     if (mins(d.end) <= mins(d.start)) return 'Finish time must be after start time.';
     if (!d.area) return 'Pick the area you worked on.';
     if (!d.tasks.length) return 'Tap at least one task you did.';
@@ -1102,7 +1105,7 @@ function vStep1(){
   var out = '<main class="gut has-bar stack-lg">';
   out += '<div class="stack-xs"><h1 class="h1">What did you work on?</h1><p class="muted">Pick the main area of your ' + esc(lowerFirst(t.name)) + ' work. Bhala matches it to your logbook code.</p></div>';
   out += '<section class="stack-sm"><div class="grid3">' +
-    '<label class="field">Date<input type="date" id="f-date" data-field="date" value="' + esc(d.date) + '" max="' + todayISO() + '"></label>' +
+    '<label class="field">Date<input type="date" id="f-date" data-field="date" value="' + esc(d.date) + '" max="' + todayISO() + '"' + (d.editId || hasSamples() ? '' : ' min="' + earliestLogDate() + '"') + '></label>' +
     '<label class="field">Start<input type="time" id="f-start" data-field="start" value="' + esc(d.start) + '"></label>' +
     '<label class="field">Finish<input type="time" id="f-end" data-field="end" value="' + esc(d.end) + '"></label></div>' +
     '<div class="grid-site"><label class="field">Company or site<input type="text" id="f-site" data-field="site" value="' + esc(d.site) + '" placeholder="e.g. Botha Engineering, George"></label>' +
@@ -1607,6 +1610,7 @@ var A = {
     var hits = sorted().filter(function(e){ return e.date === ds.date; });
     if (hits.length){ A.openEntry({id:hits[0].id}); return; }
     if (ds.date > todayISO()) return;
+    if (!hasSamples() && ds.date < earliestLogDate()){ toast(BACK_MSG); return; }
     if (gate()) return;
     if (S.draft && !S.draft.editId) dropDraftPhotos(S.draft);
     beginLog(null, ds.date);
