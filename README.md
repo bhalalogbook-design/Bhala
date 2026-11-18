@@ -60,6 +60,8 @@ In Netlify: **Site configuration → Environment variables → Add a variable**.
 
 Optional: `ITEM_NAME` (text on the PayFast page), `DAYS_PER_PAYMENT` (default 35: one month plus a few days' grace), `PAYFAST_ACCEPTED_AMOUNTS` (old prices, comma-separated, if you ever change the price so existing subscribers still unlock).
 
+`PAYFAST_EXTRA_IPS` (optional): the app only accepts payment notices from PayFast's published server addresses (built in, checked 18 Nov 2026). If PayFast announces new addresses, add them here comma-separated, for example `1.2.3.0/28`, and deploy.
+
 **After changing settings:** go to **Deploys → Trigger deploy → Deploy site**, so the functions pick them up.
 
 ## Step 3b: switch on the website forms (2 minutes)

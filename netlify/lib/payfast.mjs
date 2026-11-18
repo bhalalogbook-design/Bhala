@@ -64,9 +64,35 @@ export function itnSignatureOk(pairs, passphrase) {
 }
 
 const PF_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
+// PayFast's published server IP ranges (developers.payfast.co.za/docs#ports-ips, checked 18 Nov 2026).
+// If PayFast adds more, put them in the PAYFAST_EXTRA_IPS setting in Netlify, comma-separated (for example 1.2.3.0/28).
+const PF_RANGES = ['197.97.145.144/28', '41.74.179.192/27', '102.216.36.0/28', '102.216.36.128/28', '144.126.193.139/32'];
 
-export async function ipIsPayFast(ip, resolver = dns.promises.resolve4) {
+function ipToInt(ip) {
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
+  if (!m) return null;
+  const parts = m.slice(1).map(Number);
+  if (parts.some((n) => n > 255)) return null;
+  return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+}
+
+export function ipInRanges(ip, ranges) {
+  const n = ipToInt(ip);
+  if (n === null) return false;
+  return ranges.some((r) => {
+    const [base, bits = '32'] = String(r).trim().split('/');
+    const b = ipToInt(base); const len = Number(bits);
+    if (b === null || !(len >= 0 && len <= 32)) return false;
+    const mask = len === 0 ? 0 : (0xffffffff << (32 - len)) >>> 0;
+    return ((n & mask) >>> 0) === ((b & mask) >>> 0);
+  });
+}
+
+export async function ipIsPayFast(ip, resolver = dns.promises.resolve4, extra = process.env.PAYFAST_EXTRA_IPS || '') {
   if (!ip) return false;
+  ip = String(ip).trim().replace(/^::ffff:/i, '');
+  const ranges = PF_RANGES.concat(String(extra).split(',').map((x) => x.trim()).filter(Boolean));
+  if (ipInRanges(ip, ranges)) return true;
   const lists = await Promise.all(PF_HOSTS.map((h) => resolver(h).catch(() => [])));
   return lists.flat().includes(ip);
 }
