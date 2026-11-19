@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /admin/
+Disallow: /sign/
 Disallow: /thank-you.html
 
 Sitemap: https://bhala-logbook.netlify.app/sitemap.xml

@@ -1,6 +1,6 @@
 // Bhala offline helper: keeps the app working with no signal on site.
 // Change VERSION whenever you deploy a new app so phones pick up the update.
-const VERSION = 'bhala-v2';
+const VERSION = 'bhala-v3';
 const SHELL = ['./', './index.html', './pdf-lib.min.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

@@ -243,6 +243,20 @@ table.lb td.num{text-align:right;font-variant-numeric:tabular-nums}
 table.lb tfoot td{font-weight:700;background:var(--surface-2)}
 table.lb td.code{font-weight:600;white-space:nowrap}
 
+.sigpad{display:block;width:100%;height:170px;border:1.5px dashed var(--line-strong);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair}
+.sigimg{display:block;max-width:220px;width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal span{font-size:11px;text-align:center;color:var(--muted);font-weight:600}
+.cal i{font-style:normal;min-height:30px;border-radius:8px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+.cal i.on{background:var(--ok-bg);color:var(--ok-fg);font-weight:700}
+.cal i.wait{background:var(--warn-bg);color:var(--warn-fg);font-weight:700}
+.cal i.x{background:transparent}
+.steps3{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.steps3 li{display:flex;gap:10px;align-items:center;font-size:14px}
+.steps3 b{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--chip);font-size:12px;flex-shrink:0}
+.month-card{width:100%;color:var(--fg);cursor:pointer;font:inherit;text-align:left}
+.banner.ok-banner{background:var(--ok-bg);border-color:var(--ok-fg)}
+.banner.ok-banner > svg{color:var(--ok-fg)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--toast-bg);color:var(--toast-fg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;width:max-content;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 </style>
@@ -464,9 +478,8 @@ function workText(e){
   return s;
 }
 function statusTag(e){
-  if (e.status === 'signed') return '<span class="tag ok">Signed</span>';
-  if (e.status === 'waiting') return '<span class="tag warn">Waiting sign-off</span>';
-  return '<span class="tag">Not sent</span>';
+  if (isSigned(e)) return '<span class="tag ok">Signed</span>';
+  return '<span class="tag warn">Waiting for mentor</span>';
 }
 function saveFile(name, blob){
   return cap('downloads').then(function(dl){
@@ -590,9 +603,10 @@ function cleanPlan(p){
   if (p.pro && Number(p.pro.until) > 0) np.pro = {until:Number(p.pro.until), checkedAt:Number(p.pro.checkedAt) || 0, status:String(p.pro.status || '')};
   return np;
 }
-var S = {v:2, profile:defaultProfile(), entries:[], draft:null, plan:newPlan()};
+var S = {v:2, profile:defaultProfile(), entries:[], draft:null, signs:[], links:[], plan:newPlan()};
 var UI = {ready:false, view:'today', entryId:null, backTo:'history', err:'', histFilter:'all', histQuery:'', histCode:null,
   confirmDel:false, matQuery:'', photoBusy:false, payState:'', remindAt:'16:30', saveFail:false, pendingRestore:null, setupTrade:null, copyText:'',
+  month:'', signMode:'', signName:null, signAgree:false, linkBusy:false, linkCheckAt:0, monthBusy:false, monthMsg:'',
   exp:{from:'', to:'', photos:true, busy:false, msg:''}};
 
 var saveTimer = null;
@@ -716,6 +730,132 @@ function vPlan(){
 }
 function removeSamples(){ S.entries = S.entries.filter(function(e){ return !e.sample; }); }
 
+/* ---------- monthly mentor sign-off ---------- */
+function monthOf(d){ return String(d || '').slice(0, 7); }
+function monthLabel(ym){ var q = String(ym).split('-'); return (MON[Number(q[1]) - 1] || '') + ' ' + q[0]; }
+function cleanSigns(a){
+  return Array.isArray(a) ? a.filter(function(x){ return x && typeof x.id === 'string' && /^\d{4}-\d{2}$/.test(x.month) && Array.isArray(x.entryIds); }).map(function(x){
+    return {id:x.id.slice(0, 40), month:x.month, entryIds:x.entryIds.filter(function(i){ return typeof i === 'string'; }), name:String(x.name || '').slice(0, 80),
+      at:Number(x.at) || Date.now(), png:(typeof x.png === 'string' && x.png.indexOf('data:image/png;base64,') === 0) ? x.png : '', method:x.method === 'link' ? 'link' : 'phone'};
+  }) : [];
+}
+function cleanLinks(a){
+  return Array.isArray(a) ? a.filter(function(x){ return x && /^[a-f0-9]{32}$/.test(x.token) && /^\d{4}-\d{2}$/.test(x.month) && Array.isArray(x.entryIds); }).map(function(x){
+    return {token:x.token, month:x.month, entryIds:x.entryIds.filter(function(i){ return typeof i === 'string'; }), at:Number(x.at) || Date.now(), mentor:String(x.mentor || '').slice(0, 80)};
+  }) : [];
+}
+function signById(id){ for (var i = 0; i < S.signs.length; i++) if (S.signs[i].id === id) return S.signs[i]; return null; }
+function isLocked(e){ return !!(e && e.signId); }
+function isSigned(e){ return e.status === 'signed' || !!e.signId; }
+function byDateAsc(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.start < b.start ? -1 : 1); }
+function monthEntries(ym, tid){ return S.entries.filter(function(e){ return tidOf(e) === tid && monthOf(e.date) === ym; }).sort(byDateAsc); }
+function monthsWithEntries(tid){ return uniq(S.entries.filter(function(e){ return tidOf(e) === tid; }).map(function(e){ return monthOf(e.date); })).sort().reverse(); }
+function waitingIn(ym, tid){ return monthEntries(ym, tid).filter(function(e){ return !isSigned(e); }); }
+function allWaiting(tid){ return S.entries.filter(function(e){ return tidOf(e) === tid && !isSigned(e); }); }
+function linkFor(ym){ return S.links.filter(function(l){ return l.month === ym; })[0] || null; }
+function applySign(rec){
+  var now = Date.now(), ids = {};
+  rec.entryIds.forEach(function(id){ ids[id] = 1; });
+  S.entries.forEach(function(e){ if (ids[e.id]){ e.status = 'signed'; e.signId = rec.id; e.updatedAt = now; } });
+  S.signs.push(rec);
+}
+function apiOn(){ return typeof CFG !== 'undefined' && !!CFG.api && /^https?:$/.test(location.protocol) && !/claude/.test(location.hostname); }
+function planGate(){ return typeof gate === 'function' && gate(); }
+function signUrl(token){ return location.origin + '/sign/?t=' + token; }
+function waLink(ln, n){
+  var who = ln.mentor ? 'Hi ' + ln.mentor + ', p' : 'Hi, p';
+  return 'https://wa.me/?text=' + encodeURIComponent(who + 'lease check and sign my Bhala logbook for ' + monthLabel(ln.month) + ' (' + plural(n, 'day', 'days') + '). It takes a minute: ' + signUrl(ln.token));
+}
+function postSign(body){ return fetch(CFG.api + '/sign', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); }
+function monthPacket(ym, tid, list){
+  var T = tr(tid), pr = S.profile;
+  return {v:1, month:ym, monthLabel:monthLabel(ym), trade:T.name, qual:qualLabel(tid), apprentice:pr.name || '', studentNo:pr.studentNo || '', employer:pr.employer || '',
+    college:pr.college || COLLEGE, mentor:pr.mentor || '',
+    days:list.map(function(e){ return {date:e.date, label:fmtShort(e.date), time:e.start + ' to ' + e.end, h:Math.round(hoursOf(e) * 10) / 10, work:workText(e).slice(0, 600), code:codeOf(e), level:(lvlOf(e.level) || {}).short || ''}; })};
+}
+function sendLink(){
+  var tid = curTid(), ym = UI.month, wait = waitingIn(ym, tid);
+  if (!wait.length || UI.linkBusy) return;
+  UI.linkBusy = true; render();
+  postSign({action:'create', uid:S.plan.uid, packet:monthPacket(ym, tid, wait)})
+    .then(function(r){ if (!r.ok) throw new Error('create ' + r.status); return r.json(); })
+    .then(function(o){
+      if (!o || !/^[a-f0-9]{32}$/.test(o.token)) throw new Error('token');
+      var ln = {token:o.token, month:ym, entryIds:wait.map(function(e){ return e.id; }), at:Date.now(), mentor:S.profile.mentor || ''};
+      S.links = S.links.filter(function(l){ return l.month !== ym; }); S.links.push(ln); persist();
+      UI.linkBusy = false; render(); toast('Link ready. Send it to your mentor on WhatsApp.');
+    }).catch(function(){ UI.linkBusy = false; render(); toast('The link couldn’t be made. Check your internet and try again.'); });
+}
+function checkLinks(manual){
+  if (!apiOn() || !S.links.length){ if (manual) toast('No links waiting.'); return; }
+  UI.linkCheckAt = Date.now();
+  var changed = false, msgs = [];
+  Promise.all(S.links.slice().map(function(ln){
+    return fetch(CFG.api + '/sign?t=' + ln.token + '&uid=' + encodeURIComponent(S.plan.uid) + '&result=1', {cache:'no-store'})
+      .then(function(r){ if (r.status === 404) return {gone:true}; if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(function(o){
+        if (o.gone){ S.links = S.links.filter(function(l){ return l.token !== ln.token; }); changed = true; msgs.push('A sign-off link expired. Make a new one.'); return; }
+        if (!o.signed) return;
+        var okIds = ln.entryIds.filter(function(id){ var e = S.entries.filter(function(x){ return x.id === id; })[0]; return e && !isSigned(e) && (e.updatedAt || 0) <= ln.at; });
+        var gone = ln.entryIds.length - okIds.length, nm = String(o.signed.name || '').slice(0, 80);
+        if (okIds.length) applySign({id:uid(), month:ln.month, entryIds:okIds, name:nm, at:Number(o.signed.at) || Date.now(),
+          png:/^data:image\/png;base64,/.test(o.signed.png || '') ? o.signed.png : '', method:'link'});
+        S.links = S.links.filter(function(l){ return l.token !== ln.token; }); changed = true;
+        msgs.push((nm || 'Your mentor') + ' signed ' + monthLabel(ln.month) + '.' + (gone ? ' ' + plural(gone, 'day was', 'days were') + ' changed after you sent the link, so ask again for ' + (gone === 1 ? 'that one.' : 'those.') : ''));
+        postSign({action:'done', t:ln.token, uid:S.plan.uid}).catch(function(){});
+      }).catch(function(){});
+  })).then(function(){
+    if (changed){ persist(); if (UI.view !== 'log' && UI.signMode !== 'phone') render(); }
+    if (msgs.length) toast(msgs.join(' ')); else if (manual) toast('Not signed yet. Bhala checks again when you open this page.');
+  });
+}
+var SIG = {has:false};
+function initSigPad(){
+  var c = document.getElementById('sigPad'); if (!c) return;
+  var r = c.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = Math.max(1, Math.round(r.width * dpr)); c.height = Math.max(1, Math.round(r.height * dpr));
+  var ctx = c.getContext('2d'); ctx.scale(dpr, dpr); ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0E2A47'; ctx.fillStyle = '#0E2A47';
+  SIG.has = false;
+  var down = false, last = null;
+  function pt(ev){ var b = c.getBoundingClientRect(); return {x:ev.clientX - b.left, y:ev.clientY - b.top}; }
+  c.addEventListener('pointerdown', function(ev){ down = true; last = pt(ev); try { c.setPointerCapture(ev.pointerId); } catch (e){} ctx.beginPath(); ctx.arc(last.x, last.y, 1.2, 0, Math.PI * 2); ctx.fill(); SIG.has = true; ev.preventDefault(); });
+  c.addEventListener('pointermove', function(ev){ if (!down) return; var q = pt(ev); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(q.x, q.y); ctx.stroke(); last = q; SIG.has = true; ev.preventDefault(); });
+  function up(){ down = false; }
+  c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+}
+function sigData(){
+  var c = document.getElementById('sigPad'); if (!c || !SIG.has) return '';
+  var k = Math.min(1, 600 / c.width), o = document.createElement('canvas');
+  o.width = Math.max(1, Math.round(c.width * k)); o.height = Math.max(1, Math.round(c.height * k));
+  o.getContext('2d').drawImage(c, 0, 0, o.width, o.height);
+  return o.toDataURL('image/png');
+}
+function afterRender(){
+  initSigPad();
+  if (S.links.length && apiOn() && (UI.view === 'signoff' || UI.view === 'signmonth' || UI.view === 'today') && Date.now() - (UI.linkCheckAt || 0) > 20000) checkLinks(false);
+}
+function saveBlob(name, blob){
+  return cap('downloads').then(function(dl){
+    if (dl) return dl.save({filename:name, data:blob});
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 5000);
+  });
+}
+function exportMonthPdf(ym){
+  var tid = curTid(), list = monthEntries(ym, tid);
+  if (!list.length){ UI.monthMsg = 'No days logged in this month.'; render(); return; }
+  UI.monthBusy = true; UI.monthMsg = ''; render();
+  var name = 'Bhala sign-off ' + (String(S.profile.name || 'apprentice').replace(/[^\w\- ]+/g, '').trim() || 'apprentice') + ' ' + monthLabel(ym) + '.pdf';
+  buildPdf(list, false, tid, {month:ym}).then(function(bytes){
+    return saveBlob(name, new Blob([bytes], {type:'application/pdf'})).then(function(){ UI.monthMsg = 'Your PDF is ready. Send it to your WIL department.'; })
+      .catch(function(err){ UI.monthMsg = err && err.code === 'declined' ? 'Download cancelled.' : 'The PDF couldn’t be saved here.'; });
+  }).catch(function(err){
+    UI.monthMsg = (err && err.message === 'pdf-lib') ? 'The PDF maker didn’t load. Check your internet connection and try again.' : 'Something went wrong making the PDF. Try again.';
+    if (window.console) console.error(err);
+  }).then(function(){ UI.monthBusy = false; if (UI.view === 'signmonth') render(); });
+}
+
 /* ---------- drafts ---------- */
 function newDraft(from, date){
   var p = S.profile, tid = curTid(), t = tr(tid);
@@ -833,6 +973,11 @@ function vToday(){
       (last ? '<button type="button" class="btn btn-ghost btn-block" data-act="startLog" data-copy="1">' + I(IC.copy) + 'Start from my last entry</button>' : '') +
       '</section>';
   }
+  var waitAll = allWaiting(tid), curM = monthOf(today), waitOld = waitAll.filter(function(e){ return monthOf(e.date) < curM; }).length;
+  if (waitAll.length && (waitOld || new Date().getDate() >= 25 || hasSamples() || S.links.length)){
+    out += '<section class="card row-between"><div class="stack-xs"><h2 class="h3">Mentor sign-off</h2><p class="muted sm">' + plural(waitAll.length, 'day', 'days') + ' waiting for ' + esc(p.mentor || 'your mentor') + '</p></div>' +
+      '<button type="button" class="btn btn-ghost" data-act="go" data-view="signoff">Get signed</button></section>';
+  }
   out += weekStrip();
   out += '<div class="stats">' +
     '<div class="stat"><b>' + st.days + '</b><span>days logged</span></div>' +
@@ -851,7 +996,7 @@ function histFiltered(){
   var q = UI.histQuery.trim().toLowerCase(), wk = weekStart(todayISO());
   return sorted().filter(function(e){
     if (UI.histCode && codeKey(e) !== UI.histCode) return false;
-    if (UI.histFilter === 'waiting' && e.status !== 'waiting') return false;
+    if (UI.histFilter === 'waiting' && isSigned(e)) return false;
     if (UI.histFilter === 'photos' && !(e.photos || []).length) return false;
     if (UI.histFilter === 'week' && weekStart(e.date) !== wk) return false;
     if (q){
@@ -927,15 +1072,21 @@ function vEntry(){
     (n ? '<div class="thumbs big">' + e.photos.map(function(ph){ return '<figure class="thumb"><img data-photo="' + esc(ph.id) + '" alt="Photo of the work on ' + esc(fmtShort(e.date)) + '"><span class="miss">Photo not on this device</span></figure>'; }).join('') + '</div>'
        : '<p class="muted sm">No photos on this entry.</p>') + '</section>';
   if (e.notes) out += '<section class="stack-sm"><h2 class="h3">Notes</h2><p class="card">' + esc(e.notes) + '</p></section>';
-  out += '<section class="stack-sm"><div class="grid2">' +
-    '<button type="button" class="btn btn-ghost" data-act="editEntry">' + I(IC.edit) + 'Edit</button>' +
-    '<button type="button" class="btn btn-ghost" data-act="toggleSigned">' + (e.status === 'signed' ? 'Undo sign-off' : I(IC.check, 2.4) + 'Mentor signed') + '</button></div>' +
-    '<button type="button" class="btn btn-ghost btn-block" data-act="copySummary">' + I(IC.chat) + 'Copy for WhatsApp</button>';
+  var sg = signById(e.signId);
+  out += '<section class="stack-sm">';
+  if (isLocked(e)){
+    out += '<div class="banner ok-banner">' + I(IC.check, 2.4) + '<div class="stack-xs"><p class="fw6">Signed by ' + esc(sg ? sg.name : 'your mentor') + (sg ? ' on ' + esc(fmtDay(isoDate(new Date(sg.at)))) : '') + '</p>' +
+      '<p class="sm">Signed days are locked. If something is wrong, speak to your WIL department.</p></div></div>';
+  } else {
+    out += '<div class="grid2"><button type="button" class="btn btn-ghost" data-act="editEntry">' + I(IC.edit) + 'Edit</button>' +
+      '<button type="button" class="btn btn-ghost" data-act="openMonth" data-m="' + esc(monthOf(e.date)) + '">' + I(IC.check, 2.4) + 'Sign-off</button></div>';
+  }
+  out += '<button type="button" class="btn btn-ghost btn-block" data-act="copySummary">' + I(IC.chat) + 'Copy for WhatsApp</button>';
   if (UI.copyText){
     out += '<label class="field">Copy this text and send it to your mentor<textarea id="copyBox" class="copybox" readonly>' + esc(UI.copyText) + '</textarea></label>';
   }
-  out += '<p class="muted xs">Tap “Mentor signed” once your mentor has signed this day in your printed logbook.</p>';
-  if (UI.confirmDel){
+  if (isLocked(e)){ /* signed days can't be deleted */ }
+  else if (UI.confirmDel){
     out += '<div class="banner warn" role="alert">' + I(IC.trash) + '<div class="stack-sm" style="flex:1;min-width:0"><p class="fw6">Delete this entry and its photos?</p><p class="sm">This can’t be undone.</p>' +
       '<div class="grid2"><button type="button" class="btn btn-danger" data-act="confirmDelete">Delete</button><button type="button" class="btn btn-ghost" data-act="cancelDelete">Keep it</button></div></div></div>';
   } else {
@@ -957,6 +1108,7 @@ function vCodes(){
     out += '<div class="banner">' + I(IC.info) + '<div class="stack-xs"><p class="fw6">Draft code list for ' + esc(t.name) + '</p><p class="sm">The work areas follow the usual ' + esc(lowerFirst(t.name)) + ' practical. Your facilitator confirms the final codes before you hand in.</p></div></div>';
   }
   out += '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="go" data-view="logbook">' + I(IC.file) + 'See logbook and download PDF</button>';
+  out += '<button type="button" class="btn btn-ghost btn-lg btn-block" data-act="go" data-view="signoff">' + I(IC.check, 2.4) + 'Monthly mentor sign-off</button>';
   t.mods.forEach(function(m){
     var doneN = LEVELS.filter(function(l){ return codeStat(st, tid, m.id + '-' + l.id).n >= 3; }).length;
     out += '<section class="card stack-sm"><div class="row"><span class="tag">' + m.id + '</span><h2 class="h3" style="flex:1;min-width:0">' + esc(m.name) + '</h2><span class="muted xs fw6">' + doneN + '/3 done</span></div><div class="lvls">';
@@ -1230,7 +1382,6 @@ function vStep5(){
   var count = S.entries.filter(function(e){ return codeKey(e) === key && e.id !== d.editId; }).length + 1;
   var pips = ''; for (var k = 0; k < 3; k++) pips += '<span class="pip' + (k < count ? ' on' : '') + '"></span>';
   var mentor = S.profile.mentor || 'your mentor';
-  var wasSigned = d.editId && (S.entries.filter(function(e){ return e.id === d.editId; })[0] || {}).status === 'signed';
   var out = '<main class="gut has-bar stack">';
   out += '<div class="stack-xs"><h1 class="h1">Check and save</h1><p class="muted">Bhala matched this work to your logbook code.</p></div>';
   out += '<section class="codecard"><span class="k">Matched code</span><span class="code">' + esc((t.qual ? t.qual + '-' : '') + code) + '</span>' +
@@ -1246,9 +1397,7 @@ function vStep5(){
     row('Tools', esc(d.tools.length ? d.tools.slice(0, 3).join(', ') + (d.tools.length > 3 ? ' +' + (d.tools.length - 3) : '') : 'None'), 2) +
     row('Materials', esc(mats.length ? mats.slice(0, 3).map(matText).join(', ') + (mats.length > 3 ? ' +' + (mats.length - 3) : '') : 'None'), 3) +
     row('Evidence', plural(d.photos.length, 'photo', 'photos') + (d.notes ? ', 1 note' : ''), 4) + '</dl>';
-  out += '<label class="check"><input type="checkbox" id="f-mentor" data-field="sendMentor"' + (d.sendMentor ? ' checked' : '') + '>' +
-    '<span class="stack-xs"><span class="fw6">Send to ' + esc(mentor) + ' for sign-off</span><span class="muted xs">' +
-    (wasSigned ? 'Changes to a signed entry need your mentor to sign again.' : 'Tick this once your mentor has signed this day.') + '</span></span></label>';
+  out += '<p class="muted sm">' + esc(S.profile.mentor ? mentor : 'Your mentor') + ' signs all your days once a month, on your phone or with a WhatsApp link. Find it under Codes, then Monthly mentor sign-off.</p>';
   out += errBox() + '</main>' + flowBar(I(IC.check, 2.6) + (d.editId ? 'Save changes' : 'Save to logbook'), 'saveEntry', 'Saved on this device');
   return out;
 }
@@ -1258,7 +1407,81 @@ function vLog(){
   return flowTop() + [vStep1, vStep2, vStep3, vStep4, vStep5][d.step - 1]();
 }
 
-var VIEWS = {plan:vPlan, today:vToday, history:vHistory, entry:vEntry, codes:vCodes, logbook:vLogbook, me:vMe, setup:vSetup, log:vLog};
+function vSignoff(){
+  var tid = curTid(), months = monthsWithEntries(tid);
+  var out = subTop('Mentor sign-off', 'codes');
+  out += '<main class="gut has-bar">';
+  out += '<section class="stack-xs"><h1 class="h1">Monthly sign-off</h1><p class="muted">Your mentor checks and signs a whole month at once. Then the signed month goes to your WIL department, and your trainer approves it.</p></section>';
+  out += '<ol class="steps3"><li><b>1</b>Mentor signs the month</li><li><b>2</b>WIL department receives it</li><li><b>3</b>Trainer approves</li></ol>';
+  if (!months.length) out += '<div class="card empty"><p class="fw6">Nothing to sign yet</p><p class="muted sm">Log your days first. Your mentor signs them once a month.</p></div>';
+  months.forEach(function(ym){
+    var es = monthEntries(ym, tid), wait = es.filter(function(e){ return !isSigned(e); }), hrs = es.reduce(function(a, e){ return a + hoursOf(e); }, 0), ln = linkFor(ym);
+    var tag = !wait.length ? '<span class="tag ok">All signed</span>' : ln ? '<span class="tag warn">Link with mentor</span>' : '<span class="tag warn">' + plural(wait.length, 'day', 'days') + ' to sign</span>';
+    out += '<button type="button" class="card row-between month-card" data-act="openMonth" data-m="' + ym + '"><span class="stack-xs"><span class="h3">' + esc(monthLabel(ym)) + '</span>' +
+      '<span class="muted sm">' + plural(es.length, 'day', 'days') + ' · ' + fmtH(hrs) + ' hours</span></span>' + tag + '</button>';
+  });
+  out += '</main>' + nav('codes');
+  return out;
+}
+function calGrid(ym, es){
+  var q = ym.split('-').map(Number), lead = (new Date(q[0], q[1] - 1, 1).getDay() + 6) % 7, days = new Date(q[0], q[1], 0).getDate(), by = {};
+  es.forEach(function(e){ var d = Number(e.date.slice(8)); by[d] = by[d] || {wait:false}; if (!isSigned(e)) by[d].wait = true; });
+  var out = '<div class="cal" aria-hidden="true">' + ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(function(x){ return '<span>' + x + '</span>'; }).join('');
+  for (var i = 0; i < lead; i++) out += '<i class="x"></i>';
+  for (var d = 1; d <= days; d++) out += '<i class="' + (by[d] ? (by[d].wait ? 'wait' : 'on') : '') + '">' + d + '</i>';
+  return out + '</div>';
+}
+function vSignMonth(){
+  var tid = curTid(), ym = UI.month;
+  if (!/^\d{4}-\d{2}$/.test(ym)){ UI.view = 'signoff'; return vSignoff(); }
+  var es = monthEntries(ym, tid), wait = es.filter(function(e){ return !isSigned(e); }), hrs = es.reduce(function(a, e){ return a + hoursOf(e); }, 0);
+  var ln = linkFor(ym), signs = S.signs.filter(function(x){ return x.month === ym; });
+  var out = subTop('Mentor sign-off', 'signoff');
+  out += '<main class="gut has-bar">';
+  out += '<section class="stack-xs"><h1 class="h1">' + esc(monthLabel(ym)) + '</h1><p class="muted">' + plural(es.length, 'day', 'days') + ' at work · ' + fmtH(hrs) + ' hours · ' +
+    (wait.length ? plural(wait.length, 'day', 'days') + ' waiting' : 'all signed') + '</p></section>';
+  out += '<section class="card stack-sm"><h2 class="h3">Attendance</h2>' + calGrid(ym, es) +
+    '<p class="muted xs">Green: signed. Orange: waiting for your mentor. This is your attendance register for the month.</p></section>';
+  signs.forEach(function(x){
+    out += '<section class="card stack-sm"><div class="row-between"><h2 class="h3">Signed by ' + esc(x.name) + '</h2><span class="tag ok">' + plural(x.entryIds.length, 'day', 'days') + '</span></div>' +
+      '<p class="muted sm">' + esc(fmtDay(isoDate(new Date(x.at)))) + ' · ' + (x.method === 'link' ? 'signed with a WhatsApp link' : 'signed on this phone') + '</p>' +
+      (x.png ? '<img class="sigimg" src="' + x.png + '" alt="Signature of ' + esc(x.name) + '">' : '') + '</section>';
+  });
+  if (wait.length){
+    out += '<section class="stack-sm"><h2 class="h3">Waiting for your mentor</h2><div class="entries">' + wait.map(entryRow).join('') + '</div></section>';
+    if (UI.signMode === 'phone'){
+      out += '<section class="card stack" id="signBox"><h2 class="h2">Mentor: check and sign</h2>' +
+        '<p class="sm">' + (wait.length === 1 ? 'Please check the day above, then sign.' : 'Please check the ' + wait.length + ' days above. One signature approves them all.') + '</p>' +
+        '<label class="field">Mentor’s full name<input type="text" id="signName" data-field="signName" value="' + esc(UI.signName != null ? UI.signName : (S.profile.mentor || '')) + '" autocomplete="off"></label>' +
+        '<label class="check"><input type="checkbox" id="signAgree" data-field="signAgree"' + (UI.signAgree ? ' checked' : '') + '><span class="sm">I confirm ' + esc(S.profile.name || 'the apprentice') + ' did this work under my supervision.</span></label>' +
+        '<div class="stack-xs"><span class="fw6 sm">Sign with your finger</span><canvas id="sigPad" class="sigpad" aria-label="Signature pad"></canvas>' +
+        '<button type="button" class="linkbtn" data-act="sigClear">Clear signature</button></div>' +
+        '<p class="err" id="signErr" role="alert" hidden></p>' +
+        '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="approveMonth">' + I(IC.check, 2.6) + (wait.length === 1 ? 'Approve this day' : 'Approve all ' + wait.length + ' days') + '</button>' +
+        '<button type="button" class="btn btn-ghost btn-block" data-act="signCancel">Cancel</button></section>';
+    } else if (ln){
+      out += '<section class="card stack-sm"><h2 class="h3">Link for ' + esc(ln.mentor || 'your mentor') + '</h2>' +
+        '<p class="muted sm">Made ' + esc(fmtDay(isoDate(new Date(ln.at)))) + '. Send it on WhatsApp. Bhala picks up the signature by itself when your mentor signs.</p>' +
+        '<a class="btn btn-primary btn-block" id="waLink" href="' + esc(waLink(ln, wait.length)) + '" target="_blank" rel="noopener">' + I(IC.chat) + 'Send the link on WhatsApp</a>' +
+        '<div class="grid2"><button type="button" class="btn btn-ghost" data-act="checkLinks">Check now</button><button type="button" class="btn btn-ghost" data-act="cancelLink">Cancel link</button></div>' +
+        '<button type="button" class="btn btn-ghost btn-block" data-act="signHere">Mentor is here: sign on this phone</button></section>';
+    } else {
+      out += '<section class="card stack-sm"><h2 class="h3">Get it signed</h2>' +
+        '<button type="button" class="btn btn-primary btn-lg btn-block" data-act="signHere">' + I(IC.edit) + 'Mentor signs on this phone</button>' +
+        (apiOn() ? '<button type="button" class="btn btn-ghost btn-block" data-act="sendLink"' + (UI.linkBusy ? ' disabled' : '') + '>' + I(IC.chat) + (UI.linkBusy ? 'Making the link…' : 'Send a WhatsApp link to my mentor') + '</button>' +
+          '<p class="muted xs">The link shows your mentor this month’s days, without photos. It’s deleted once they sign, or after 45 days.</p>' : '') +
+        '</section>';
+    }
+  }
+  out += '<section class="card stack-sm"><h2 class="h3">Send to your WIL department</h2>' +
+    '<p class="muted sm">Download the signed month as a PDF and send it to WIL. It has your days, the attendance register, your mentor’s signature, and boxes for WIL and your trainer.</p>' +
+    '<button type="button" class="btn ' + (signs.length ? 'btn-primary' : 'btn-ghost') + ' btn-block" data-act="monthPdf"' + (UI.monthBusy ? ' disabled' : '') + '>' + I(IC.download, 2.2) + (UI.monthBusy ? 'Making your PDF…' : 'Download month PDF') + '</button>' +
+    (UI.monthMsg ? '<p class="sm fw6" role="status">' + esc(UI.monthMsg) + '</p>' : '') + '</section>';
+  out += '</main>' + nav('codes');
+  return out;
+}
+
+var VIEWS = {plan:vPlan, today:vToday, history:vHistory, entry:vEntry, codes:vCodes, logbook:vLogbook, me:vMe, setup:vSetup, log:vLog, signoff:vSignoff, signmonth:vSignMonth};
 
 /* ---------- render ---------- */
 var urlCache = {};
@@ -1282,6 +1505,7 @@ function render(){
   var v = VIEWS[UI.view] || vToday;
   $app.innerHTML = v();
   hydratePhotos();
+  afterRender();
 }
 function top(){ try { window.scrollTo(0, 0); } catch (e){} }
 var toastTimer = null;
@@ -1338,6 +1562,7 @@ function addPhotos(files){
 
 /* ---------- backup and restore ---------- */
 function blobToDataURL(b){ return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; r.readAsDataURL(b); }); }
+function b64Bytes(u){ var bin = atob(String(u).split(',')[1] || ''), a = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
 function dataURLToBlob(u){
   var parts = String(u).split(','), mime = ((parts[0] || '').match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
   var bin = atob(parts[1] || ''), arr = new Uint8Array(bin.length);
@@ -1354,7 +1579,7 @@ function cleanEntry(e){
     materials:Array.isArray(e.materials) ? e.materials.filter(function(m){ return m && typeof m.name === 'string'; }).map(function(m){ return {name:m.name.slice(0, 120), unit:String(m.unit || 'pcs').slice(0, 12), qty:Number(m.qty) || 0}; }) : [],
     photos:Array.isArray(e.photos) ? e.photos.filter(function(p){ return p && typeof p.id === 'string'; }).map(function(p){ return {id:p.id, w:Number(p.w) || 4, h:Number(p.h) || 3}; }) : [],
     notes:String(e.notes || '').slice(0, 2000), status:['signed', 'waiting', 'notsent'].indexOf(e.status) >= 0 ? e.status : 'notsent',
-    sample:!!e.sample, createdAt:Number(e.createdAt) || Date.now(), updatedAt:Number(e.updatedAt) || Date.now()};
+    sample:!!e.sample, signId:typeof e.signId === 'string' ? e.signId.slice(0, 40) : '', createdAt:Number(e.createdAt) || Date.now(), updatedAt:Number(e.updatedAt) || Date.now()};
 }
 function cleanProfile(pr){
   pr = pr || {};
@@ -1365,6 +1590,7 @@ function backup(){
   (function(){
     var out = {app:'Bhala', v:2, exportedAt:new Date().toISOString(), profile:S.profile, entries:S.entries, photos:{},
       plan:{uid:S.plan.uid, trialStart:S.plan.trialStart, email:S.plan.email || ''}};
+    out.signs = S.signs;
     var chain = Promise.resolve();
     S.entries.forEach(function(e){ (e.photos || []).forEach(function(p){
       chain = chain.then(function(){ return Store.getPhoto(p.id).then(function(b){ if (b) return blobToDataURL(b).then(function(u){ out.photos[p.id] = u; }); }); });
@@ -1405,7 +1631,7 @@ function pdfSafe(s){
   return String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
     .replace(/…/g, '...').replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
 }
-function buildPdf(list, withPhotos, tid){
+function buildPdf(list, withPhotos, tid, opt){
   return waitPdfLib().then(function(L){
     var PDFDocument = L.PDFDocument, rgb = L.rgb, SF = L.StandardFonts, T = tr(tid);
     var W = 595.28, H = 841.89, M = 40;
@@ -1493,7 +1719,93 @@ function buildPdf(list, withPhotos, tid){
         });
         y = sy + 34;
       }
+      function detailsBlock(title, sub){
+        text(title, M, 100, 20, bold);
+        text(sub, M, 118, 10, font, MUTED);
+        var fields = [['Apprentice', p.name], ['Student number', p.studentNo], ['Host employer', p.employer], ['Mentor (qualified artisan)', p.mentor], ['Training provider', p.college || COLLEGE], ['Trade', T.name]];
+        var colW = (W - 2 * M - 24) / 2;
+        fields.forEach(function(f, i){
+          var x = M + (i % 2) * (colW + 24), fy = 146 + Math.floor(i / 2) * 40;
+          text(f[0], x, fy, 8, font, MUTED);
+          text(wrap(f[1] || '-', bold, 11, colW)[0], x, fy + 15, 11, bold);
+          page.drawLine({start:{x:x, y:H - fy - 21}, end:{x:x + colW, y:H - fy - 21}, thickness:0.6, color:RULE});
+        });
+        y = 146 + 3 * 40 + 8;
+      }
+      /* one month for the WIL department: days, attendance register, mentor signature, WIL and trainer boxes */
+      function monthPages(){
+        var ym = opt.month, signsM = S.signs.filter(function(x){ return x.month === ym; }), OKBG = rgb(227/255, 243/255, 234/255);
+        var waitN = list.filter(function(e){ return !isSigned(e); }).length, hrsTot = list.reduce(function(a, e){ return a + hoursOf(e); }, 0);
+        newPage();
+        detailsBlock('Monthly logbook sign-off', qualLabel(tid) + ' · ' + monthLabel(ym));
+        text('Attendance register', M, y + 14, 12, bold);
+        textR(plural(uniq(list.map(function(e){ return e.date; })).length, 'day', 'days') + ' at work · ' + fmtH(hrsTot) + ' hours', W - M, y + 14, 9.5, font, MUTED);
+        y += 26;
+        var q = ym.split('-').map(Number), lead = (new Date(q[0], q[1] - 1, 1).getDay() + 6) % 7, nDays = new Date(q[0], q[1], 0).getDate(), byDay = {};
+        list.forEach(function(e){ var d = Number(e.date.slice(8)); byDay[d] = (byDay[d] || 0) + hoursOf(e); });
+        var gw = (W - 2 * M) / 7, gh = 28;
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function(dn, i){ text(dn, M + i * gw + 4, y + 8, 8, bold, MUTED); });
+        y += 12;
+        var rows = Math.ceil((lead + nDays) / 7);
+        for (var r = 0; r < rows; r++){
+          for (var c = 0; c < 7; c++){
+            var day = r * 7 + c - lead + 1, x = M + c * gw;
+            if (day < 1 || day > nDays) continue;
+            var on = byDay[day] != null;
+            page.drawRectangle({x:x + 1, y:H - y - gh + 1, width:gw - 2, height:gh - 2, color:on ? OKBG : PALE, borderColor:RULE, borderWidth:0.4});
+            text(String(day), x + 5, y + 11, 8, on ? bold : font, on ? OK : MUTED);
+            if (on) textR(fmtH(byDay[day]) + ' h', x + gw - 5, y + gh - 6, 8, bold, OK);
+          }
+          y += gh;
+        }
+        text('Taken from the apprentice’s daily log. Green days were at work.', M, y + 12, 8, font, MUTED);
+        y += 22;
+        text('Work done this month', M, y + 14, 12, bold); y += 22;
+        var cwW = W - 2 * M;
+        table([{w:54}, {w:cwW - 54 - 78 - 32 - 52}, {w:78, bold:true}, {w:32, align:'right'}, {w:52, align:'center'}],
+          ['Date', 'Work done and materials', 'Code', 'Hrs', 'Mentor'],
+          list.map(function(e){ return [fmtShort(e.date), workText(e) + (e.site && e.site !== p.employer ? ' Site: ' + e.site + '.' : ''), codeOf(e), fmtH(hoursOf(e)), isSigned(e) ? 'Signed' : 'Not yet']; }),
+          ['Total hours this month', fmtH(hrsTot), ''], {footSpan:3});
+        return Promise.all(signsM.map(function(x){ return x.png ? doc.embedPng(b64Bytes(x.png)).catch(function(){ return null; }) : Promise.resolve(null); })).then(function(imgs){
+          function box(title, sub, h){
+            if (y + h + 44 > H - 50){ newPage(); y = 92; }
+            text(title, M, y + 14, 11.5, bold);
+            if (sub) text(sub, M, y + 27, 8.5, font, MUTED);
+            y += sub ? 34 : 22;
+            page.drawRectangle({x:M, y:H - y - h, width:W - 2 * M, height:h, borderColor:RULE, borderWidth:0.8});
+            var t0 = y; y += h + 14; return t0;
+          }
+          function field(label, x, ty, w){ page.drawLine({start:{x:x, y:H - ty}, end:{x:x + w, y:H - ty}, thickness:0.6, color:INK}); text(label, x, ty + 11, 8, font, MUTED); }
+          function tick(label, x, ty){ page.drawRectangle({x:x, y:H - ty - 2, width:9, height:9, borderColor:INK, borderWidth:0.8}); text(label, x + 14, ty + 6, 9, font); }
+          var c1 = M + 12, c2 = M + 182, c3 = M + 352, cw3 = 150;
+          var mh = Math.max(1, signsM.length) * 76 + (waitN ? 16 : 0);
+          if (y + 14 + 40 + 34 + mh + 20 > H - 50){ newPage(); y = 92; } else y += 14;
+          text('Sign-off', M, y + 14, 15, bold);
+          text('In this order: 1. mentor, 2. WIL department, 3. trainer.', M, y + 29, 9, font, MUTED);
+          y += 40;
+          var t1 = box('1. Mentor (host employer)', 'I confirm the work above was done under my supervision.', mh);
+          if (!signsM.length){ field('Signature', c1, t1 + 44, cw3); field('Name', c2, t1 + 44, cw3); field('Date', c3, t1 + 44, cw3); }
+          signsM.forEach(function(x, i){
+            var by = t1 + i * 76, img = imgs[i];
+            if (img){ var k = Math.min(cw3 / img.width, 48 / img.height); page.drawImage(img, {x:c1, y:H - by - 8 - img.height * k, width:img.width * k, height:img.height * k}); }
+            field('Signature', c1, by + 60, cw3);
+            text(x.name, c2, by + 24, 11, bold);
+            text('Signed ' + fmtDay(isoDate(new Date(x.at))) + ' · ' + plural(x.entryIds.length, 'day', 'days'), c2, by + 39, 9, font, MUTED);
+            text(x.method === 'link' ? 'Signed online with a Bhala link' : 'Signed on the apprentice’s phone', c2, by + 53, 9, font, MUTED);
+          });
+          if (waitN) text(plural(waitN, 'day', 'days') + ' in this month ' + (waitN === 1 ? 'is' : 'are') + ' not signed yet.', c1, t1 + mh - 8, 9, bold, ORANGE);
+          var t2 = box('2. WIL department', 'Received the signed month and captured the submission.', 84);
+          field('Date received', c1, t2 + 30, cw3); field('Submission or reference number', c2, t2 + 30, cw3); field('Captured by (name)', c3, t2 + 30, cw3);
+          field('Signature', c1, t2 + 64, cw3); field('Date', c2, t2 + 64, cw3);
+          var t3 = box('3. Trainer approval', null, 84);
+          tick('Approved', c1, t3 + 14); tick('Not approved', c1 + 80, t3 + 14); field('Comments', c2, t3 + 30, cw3 * 2 + 20);
+          field('Trainer name', c1, t3 + 64, cw3); field('Signature', c2, t3 + 64, cw3); field('Date', c3, t3 + 64, cw3);
+        });
+      }
 
+      var chain = Promise.resolve();
+      if (opt && opt.month) chain = monthPages();
+      else {
       /* page 1: summary */
       var first = list[0].date, last = list[list.length - 1].date, st = statsOf(list, tid);
       newPage();
@@ -1536,7 +1848,6 @@ function buildPdf(list, withPhotos, tid){
       /* photo pages */
       var items = [];
       if (withPhotos) list.forEach(function(e){ (e.photos || []).forEach(function(ph){ items.push({e:e, ph:ph}); }); });
-      var chain = Promise.resolve();
       if (items.length){
         var cols = 3, gap = 12, cw = (W - 2 * M - gap * (cols - 1)) / cols, ch = cw * 0.75, capH = 26, col = 0;
         chain = chain.then(function(){ newPage(); text('Photo evidence', M, 100, 15, bold); text(plural(items.length, 'photo', 'photos') + ' from these logbook entries', M, 116, 9, font, MUTED); y = 132; });
@@ -1565,6 +1876,7 @@ function buildPdf(list, withPhotos, tid){
             col++; if (col === cols){ col = 0; y += ch + capH + 12; }
           });
         });
+      }
       }
       return chain.then(function(){
         var pages = doc.getPages(), n = pages.length, gen = 'Generated by Bhala on ' + fmtDay(todayISO());
@@ -1655,7 +1967,7 @@ var A = {
     var base = {trade:d.trade, date:d.date, start:d.start, end:d.end, breakMin:Number(d.breakMin) || 0, site:String(d.site || '').trim(), area:d.area, level:d.level,
       tasks:d.tasks.slice(), tools:d.tools.slice(), ppe:d.ppe.slice(),
       materials:d.materials.filter(function(m){ return Number(m.qty) > 0; }).map(function(m){ return {name:m.name, unit:m.unit, qty:Number(m.qty)}; }),
-      photos:d.photos.map(function(p){ return {id:p.id, w:p.w, h:p.h}; }), notes:String(d.notes || '').trim(), status:d.sendMentor ? 'waiting' : 'notsent', updatedAt:now};
+      photos:d.photos.map(function(p){ return {id:p.id, w:p.w, h:p.h}; }), notes:String(d.notes || '').trim(), status:'waiting', updatedAt:now};
     if (d.editId){
       var idx = -1; S.entries.forEach(function(e, i){ if (e.id === d.editId) idx = i; });
       if (idx < 0){ id = uid(); S.entries.push(Object.assign({id:id, createdAt:now, sample:false}, base)); }
@@ -1673,13 +1985,44 @@ var A = {
   openEntry:function(ds){ if (UI.view !== 'entry') UI.backTo = UI.view; UI.view = 'entry'; UI.entryId = ds.id; UI.confirmDel = false; UI.copyText = ''; render(); top(); },
   editEntry:function(){
     var e = getEntry(); if (!e) return;
+    if (isLocked(e)){ toast('Signed days are locked.'); return; }
     if (S.draft && !S.draft.editId) dropDraftPhotos(S.draft);
     var d = clone(e);
     S.draft = {editId:e.id, trade:tidOf(e), step:5, date:d.date, start:d.start, end:d.end, breakMin:d.breakMin, site:d.site, area:d.area, tasks:d.tasks, tools:d.tools, ppe:d.ppe,
       materials:d.materials, level:d.level, photos:d.photos, notes:d.notes, sendMentor:true};
     UI.view = 'log'; UI.err = ''; UI.matQuery = ''; persist(); render(); top();
   },
-  toggleSigned:function(){ var e = getEntry(); if (!e) return; e.status = e.status === 'signed' ? 'waiting' : 'signed'; e.updatedAt = Date.now(); persist(); render(); toast(e.status === 'signed' ? 'Marked as signed' : 'Back to waiting for sign-off'); },
+  openMonth:function(ds){ UI.month = ds.m; UI.signMode = ''; UI.monthMsg = ''; UI.signName = null; UI.signAgree = false; go('signmonth'); },
+  signHere:function(){
+    if (planGate()) return;
+    UI.signMode = 'phone'; render();
+    var b = document.getElementById('signBox'); if (b && b.scrollIntoView) b.scrollIntoView({block:'start'});
+  },
+  signCancel:function(){ UI.signMode = ''; render(); },
+  sigClear:function(){ var c = document.getElementById('sigPad'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); SIG.has = false; },
+  approveMonth:function(){
+    var tid = curTid(), ym = UI.month, wait = waitingIn(ym, tid), err = '';
+    var name = String(UI.signName != null ? UI.signName : (S.profile.mentor || '')).trim();
+    if (!wait.length) return;
+    if (!name) err = 'Add the mentor’s full name.';
+    else if (!UI.signAgree) err = 'Tick the box to confirm the work.';
+    else if (!SIG.has) err = 'Sign in the box with your finger.';
+    if (err){ var el = document.getElementById('signErr'); if (el){ el.textContent = err; el.hidden = false; } return; }
+    applySign({id:uid(), month:ym, entryIds:wait.map(function(e){ return e.id; }), name:name.slice(0, 80), at:Date.now(), png:sigData(), method:'phone'});
+    var ln = linkFor(ym);
+    if (ln){ S.links = S.links.filter(function(l){ return l !== ln; }); if (apiOn()) postSign({action:'done', t:ln.token, uid:S.plan.uid}).catch(function(){}); }
+    if (!S.profile.mentor) S.profile.mentor = name.slice(0, 120);
+    UI.signMode = ''; UI.signAgree = false; UI.signName = null; persist(); render(); top();
+    toast('Signed. ' + monthLabel(ym) + ' is locked. Now send the PDF to your WIL department.');
+  },
+  sendLink:function(){ if (planGate()) return; sendLink(); },
+  checkLinks:function(){ checkLinks(true); },
+  cancelLink:function(){
+    var ln = linkFor(UI.month); if (!ln) return;
+    S.links = S.links.filter(function(l){ return l !== ln; }); persist(); render(); toast('Link cancelled');
+    if (apiOn()) postSign({action:'done', t:ln.token, uid:S.plan.uid}).catch(function(){});
+  },
+  monthPdf:function(){ if (planGate()) return; exportMonthPdf(UI.month); },
   copySummary:function(){
     var e = getEntry(); if (!e) return;
     var txt = summaryText(e);
@@ -1694,6 +2037,7 @@ var A = {
   cancelDelete:function(){ UI.confirmDel = false; render(); },
   confirmDelete:function(){
     var e = getEntry(); if (!e) return;
+    if (isLocked(e)){ toast('Signed days are locked.'); return; }
     S.entries = S.entries.filter(function(x){ return x.id !== e.id; });
     (e.photos || []).forEach(function(p){ if (!isPhotoUsed(p.id)) Store.delPhoto(p.id); });
     UI.confirmDel = false; persist(); go(UI.backTo === 'today' ? 'today' : 'history'); toast('Entry deleted');
@@ -1721,7 +2065,7 @@ var A = {
     chain.then(function(){
       S.profile = cleanProfile(o.profile);
       if (o.plan) { S.plan = cleanPlan(o.plan); checkPro().catch(function(){}); }
-      S.entries = o.entries.map(cleanEntry).filter(Boolean); S.draft = null; UI.pendingRestore = null; persist(); render();
+      S.entries = o.entries.map(cleanEntry).filter(Boolean); S.signs = cleanSigns(o.signs); S.links = []; S.draft = null; UI.pendingRestore = null; persist(); render();
       toast('Restored ' + plural(S.entries.length, 'entry', 'entries'));
     });
   },
@@ -1770,6 +2114,8 @@ $app.addEventListener('submit', function(e){
   }
 });
 function onField(f, t, type){
+  if (f === 'signName'){ UI.signName = t.value; return; }
+  if (f === 'signAgree'){ UI.signAgree = t.checked; return; }
   var d = S.draft;
   if (d && (f === 'date' || f === 'start' || f === 'end' || f === 'site' || f === 'breakMin' || f === 'notes')){
     d[f] = f === 'breakMin' ? Number(t.value) : t.value;
@@ -1802,14 +2148,14 @@ $app.addEventListener('change', function(e){
 render();
 Store.init().then(function(){ return Store.loadState(); }).then(function(saved){
   if (saved && (saved.v === 1 || saved.v === 2) && Array.isArray(saved.entries)){
-    S = {v:2, profile:cleanProfile(saved.profile), entries:saved.entries.map(cleanEntry).filter(Boolean), draft:saved.draft || null, plan:cleanPlan(saved.plan)};
+    S = {v:2, profile:cleanProfile(saved.profile), entries:saved.entries.map(cleanEntry).filter(Boolean), draft:saved.draft || null, signs:cleanSigns(saved.signs), links:cleanLinks(saved.links), plan:cleanPlan(saved.plan)};
     if (S.draft){
       if (!Array.isArray(S.draft.photos) || !Array.isArray(S.draft.tasks)) S.draft = null;
       else if (!TRADES[S.draft.trade]) S.draft.trade = 'electrician';
     }
     if (saved.v === 1) persist();
   } else {
-    S = {v:2, profile:sampleProfile('electrician'), entries:makeSamples('electrician'), draft:null, plan:newPlan()};
+    S = {v:2, profile:sampleProfile('electrician'), entries:makeSamples('electrician'), draft:null, signs:[], links:[], plan:newPlan()};
     persist();
   }
   UI.ready = true;
